@@ -18,6 +18,7 @@ public class Scheduler implements Runnable {
      * in the system
      */
     public Scheduler (){
+
         this.commands = new ArrayList<>();
     }
 
@@ -55,7 +56,7 @@ public class Scheduler implements Runnable {
     }
 
     /**
-     * To be completed
+     * To be completed at a different iteration
      */
     @Override
     public void run() {
