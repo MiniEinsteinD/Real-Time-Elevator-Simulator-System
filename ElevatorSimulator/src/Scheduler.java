@@ -34,6 +34,7 @@ public class Scheduler implements Runnable {
                 System.err.println(e);
             }
         }
+        System.out.println("Scheduler has received the following command:\n " + command);
         commands.add(command);
         notifyAll();
     }
@@ -50,7 +51,8 @@ public class Scheduler implements Runnable {
                 System.err.println(e);
             }
         }
-
+        System.out.println("Scheduler has passed the following command to the elevator :\n "
+                + commands.get(0));
         notifyAll();
         return commands.get(0);
     }
