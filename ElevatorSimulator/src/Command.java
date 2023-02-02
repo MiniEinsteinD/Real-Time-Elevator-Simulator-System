@@ -1,9 +1,16 @@
 /**
  * Class command is designed to obtain all components from the file input stream.
+<<<<<<< HEAD
  * The components are all assembled into 1 object that can be broken down to obtain all attributes. 
  * Will be used in the elevator class to enqueue a list of commands for the
  * elevator (will support multiple elevators in future iterations)
  * @author Hasan Al-hasoo 
+=======
+ * The components are all assembled into 1 object that can be broken down to obtain all attributes.
+ * Will be used in the elevator class to enqueue a list of commands for the
+ * elevator (will support multiple elevators in future iterations)
+ * @author Hasan Al-hasoo
+>>>>>>> main
  * @version 1.0
  */
 
@@ -27,6 +34,7 @@ public class Command {
         this.time = time;
         this.floor = floor;
         this.directionButton = directionButton;
+        this.directionButton = directionButton;
         this.elevatorButton = elevatorButton;
     }
 
@@ -41,7 +49,6 @@ public class Command {
                 Direction.valueOf(split[2]), Integer.parseInt(split[3]));
     }
 
-
     /**
      * Getter method for time field for the command object's creation.
      * @return time field
@@ -49,6 +56,7 @@ public class Command {
     public int getTime() {
         return time;
     }
+
     /**
      * Getter method for floor field
      * @return floor field
@@ -85,3 +93,4 @@ public class Command {
         return string;
     }
 }
+

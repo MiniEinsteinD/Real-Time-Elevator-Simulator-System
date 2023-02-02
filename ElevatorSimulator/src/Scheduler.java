@@ -11,6 +11,7 @@ import java.util.List;
 public class Scheduler implements Runnable {
 
     private List<Command> commands; //The list storing all commands in the system
+    private Floor floor;
 
 
     /**
@@ -51,10 +52,12 @@ public class Scheduler implements Runnable {
                 System.err.println(e);
             }
         }
+        Command command = commands.remove(0);
         System.out.println("Scheduler has passed the following command to the elevator :\n "
-                + commands.get(0));
+                + command);
         notifyAll();
-        return commands.get(0);
+        floor.orderCompleted(command);
+        return command;
     }
 
     /**
@@ -63,5 +66,13 @@ public class Scheduler implements Runnable {
     @Override
     public void run() {
 
+    }
+
+    /**
+     * Method used to add the floor subsystem to the scheduler
+     * @param floor to be added to the scheduler
+     */
+    public void setFloor(Floor floor) {
+        this.floor = floor;
     }
 }
