@@ -69,14 +69,6 @@ public class Scheduler implements Runnable {
     }
 
     /**
-     * Method used to add the floor subsystem to the scheduler
-     * @param floor to be added to the scheduler
-     */
-    //public void setFloor(Floor floor) {
-       // this.floor = floor;
-    //}
-
-    /**
      * Method used to add commands already serviced by elevator
      * to the ArrayList of commands
      * @param command
