@@ -1,40 +1,71 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.*;
 import java.util.ArrayList;
 
 /**
- * The Floor class represtents a floor subsystem 
+ * The Floor class represents the floor subsystem
  * 
  * @author Daniah Mohammed
  * @version 01
  */
 
  public class Floor implements Runnable{
-    private File file;
-    private boolean ordersFinished;
-    private Scheduler scheduler;
+    private File file; // File stores the commands that needs to be processed
+    private boolean ordersFinished; // boolean expression that represent that the command finished executing
+    private Scheduler scheduler; // The shared scheduler between the elevator and the floor
 
-    public Floor(Scheduler sched,File file){
+    /**
+     * Constructs a floor using the scheduler and a file
+     * @param scheduler the shared scheduler between the elevator and the floor
+     * @param file File type that stores the commands that needs to be processed
+     */
+    public Floor(Scheduler scheduler,File file){
         this.file =  file;
         this.ordersFinished = false;
-        this.scheduler = sched;
+        this.scheduler = scheduler;
     }
-    
+
+    /**
+     * Populate an ArrayList with the strings of commands from file
+     * Continuously sends commands and receives responses from the scheduler until
+     * there are no more commands
+     */
     @Override
     public void run() {
 
-        // read lines and store them as strings in an ArrayList
-        BufferedReader bufReader = new BufferedReader(new FileReader(file.getName()));
+        // read lines from file and store them as strings in an ArrayList
+        BufferedReader bufReader = null;
+        try {
+            bufReader = new BufferedReader(new FileReader(file.getName()));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
         ArrayList<String> listOfLines = new ArrayList<>();
 
-        String line = bufReader.readLine();
+        String line = null;
+        try {
+            line = bufReader.readLine();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         while (line != null) {
             listOfLines.add(line);
-            line = bufReader.readLine();
+            try {
+                line = bufReader.readLine();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        try {
+            bufReader.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
-        bufReader.close();
+        for(String command: listOfLines){
+            scheduler.placeCommand(new Command(command));
+            //scheduler.getReply();
+            //ordersFinished = true;
+        }
     }
 
     //This function might not be needed, I might be able to include it in the run function
@@ -50,5 +81,6 @@ import java.util.ArrayList;
         }
     }
 
-    public enum Direction {up, down}
+    //Not sure if we need this
+    public enum Direction {UP, DOWN}
 }
