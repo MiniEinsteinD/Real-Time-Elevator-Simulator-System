@@ -12,7 +12,7 @@ public class Scheduler implements Runnable {
 
     private List<Command> commands; //The list storing all commands in the system
     private List<Command> servicedCommands; //The list of commands already serviced by the elevators
-    private boolean exitThreads;
+    private boolean exitStatus;
 
 
     /**
@@ -23,7 +23,7 @@ public class Scheduler implements Runnable {
 
         this.commands = new ArrayList<>();
         this.servicedCommands = new ArrayList<>();
-        this.exitThreads = false;
+        this.exitStatus = false;
     }
 
     /**
@@ -112,7 +112,7 @@ public class Scheduler implements Runnable {
      */
     public void exitThreads()
     {
-        exitThreads = true;
+        exitStatus = true;
     }
 
     /**
@@ -121,7 +121,7 @@ public class Scheduler implements Runnable {
      */
     public boolean shouldExit()
     {
-        return exitThreads;
+        return exitStatus;
     }
 
 }
