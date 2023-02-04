@@ -43,7 +43,7 @@ public class Elevator implements Runnable{
             scheduler.placeServicedCommand(command);
 
             try {
-                Thread.sleep(2000);
+                Thread.sleep(500);
             } catch (InterruptedException e) {
             }
 
