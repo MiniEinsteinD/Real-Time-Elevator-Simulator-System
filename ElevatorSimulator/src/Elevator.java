@@ -29,8 +29,8 @@ public class Elevator implements Runnable{
      */
     @Override
     public void run() {
-        //while true condition will be changed once we figure out how to determine end of file
-        while (true) {
+
+        while (!scheduler.shouldExit()) {
             Command command = scheduler.getCommand();
             System.out.println("Received Command:\n" + command + "\n");
             try {
@@ -39,12 +39,14 @@ public class Elevator implements Runnable{
             }
 
             System.out.println("Finished Command:\n" + command + "\n");
-            /*
-            I am asssuming the finishedCommand is some way to send data
-            back to the scheduler, and the scheduler will send that data
-            back to the floor.
-            scheduler.finishedCommand(command);
-             */
+
+            scheduler.placeServicedCommand(command);
+
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+            }
+
         }
     }
 }
