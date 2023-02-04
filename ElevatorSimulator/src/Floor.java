@@ -63,24 +63,9 @@ import java.util.ArrayList;
 
         for(String command: listOfLines){
             scheduler.placeCommand(new Command(command));
-            //scheduler.getReply();
+            Command servicedCommand = scheduler.getServicedCommand();
             //ordersFinished = true;
         }
     }
 
-    //This function might not be needed, I might be able to include it in the run function
-    public void orderCompleted(Command command){
-        while (!ordersFinished) { 
-            command = scheduler.getCommand();
-            System.out.println("Received Command:\n" + command + "\n");
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-            }
-            System.out.println("Finished Command:\n" + command + "\n");
-        }
-    }
-
-    //Not sure if we need this
-    public enum Direction {UP, DOWN}
 }
