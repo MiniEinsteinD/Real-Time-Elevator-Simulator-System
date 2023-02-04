@@ -64,8 +64,8 @@ import java.util.ArrayList;
         for(String command: listOfLines){
             scheduler.placeCommand(new Command(command));
             Command servicedCommand = scheduler.getServicedCommand();
-            //ordersFinished = true;
         }
+        scheduler.exitThreads();
     }
 
 }
