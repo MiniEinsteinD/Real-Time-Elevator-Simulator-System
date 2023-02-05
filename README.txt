@@ -16,7 +16,7 @@ Hasan: Command Class, Partial Contribution To Scheduler, README.txt
 Daniah: Floor Class + Sequence Diagram
 Ali: Elevator Class + Reviewing Command Class / Edit Command Class
 Ethan: Junit Testing, Review Pull Requests (Quality Check), Modify/Help With Floor Class (If Needed)
-Mohammed: Continue Scheduler Class, Begin Working On Testing
+Mohammed: Programmed the Scheduler Class
 
 UML Class Diagram: Full Group Contribution
 
