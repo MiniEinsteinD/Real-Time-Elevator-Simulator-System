@@ -1,8 +1,9 @@
 General Use Instructions:
 
 
-The File ElevatorSim Is Packaged In a ZIP Format Containing The Following Contents:
+The File Iteration1_Group5 Is Packaged In a ZIP Format Containing The Following Contents:
 
+-README.txt
 -UML Class Diagram
 -UML Sequence Diagram
 -Test Instructions (.txt format) 
