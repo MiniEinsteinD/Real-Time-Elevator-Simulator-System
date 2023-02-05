@@ -40,7 +40,7 @@ Test Setup / Instructions:
 5. Select ElevatorSim under the Projects section (If it doesnt show try clicking Refresh button)
 6. Click Finish
 7. Right click on main under the src/main/java and right click on Simulator.java under the default package and run as java application.
-8. Right click on test under the src folder, click run as, and configure to use junit 4 on the left sidebar.
+8. Right click on test under the src folder, click run as, and configure to use JUnit by double clicking on JUnit on the left sidebar.
 9. You can also run tests by navigating to src/test/java, and right clicking the test files and running them using JUnit 4.
 10. The source files can be found in src/main/java and the test files are under src/test/java
 
