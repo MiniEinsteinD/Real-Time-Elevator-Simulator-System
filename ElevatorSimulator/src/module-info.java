@@ -1,9 +1,0 @@
-/**
- * 
- */
-/**
- * @author begon
- *
- */
-module ElevatorSimulator {
-}

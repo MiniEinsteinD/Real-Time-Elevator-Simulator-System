@@ -27,18 +27,18 @@ public class Elevator implements Runnable{
      * there are no more commands and the floor is done
      * reading the file
      */
-    @Override
+    //@Override
     public void run() {
 
         while (!scheduler.shouldExit()) {
             Command command = scheduler.getCommand();
-            System.out.println("Received Command:\n" + command + "\n");
+            System.out.println("Elevator received Command:\n" + command + "\n");
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
             }
 
-            System.out.println("Finished Command:\n" + command + "\n");
+            System.out.println("Elevator finished Command:\n" + command + "\n");
 
             scheduler.placeServicedCommand(command);
 

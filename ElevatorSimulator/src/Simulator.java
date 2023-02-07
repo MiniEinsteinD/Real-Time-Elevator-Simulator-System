@@ -1,3 +1,5 @@
+import java.io.File;
+
 /**
  * The Simulator class starts up the elevator simulation.
  * Contains the main method.
@@ -16,13 +18,13 @@ public class Simulator{
         Floor floor;
         File file;
 
-        file = new File("../input/commandFile");
+        file = new File("commandFile.txt");
         elevator = new Elevator(scheduler, 42);
         floor = new Floor(scheduler, file);
 
-        schedulerThread = new Thread(scheduler, "Scheduler");
-        elevatorThread = new Thread(elevator, "Elevator");
-        floorThread = new Thread(floor, "Floor");
+        Thread schedulerThread = new Thread(scheduler, "Scheduler");
+        Thread elevatorThread = new Thread(elevator, "Elevator");
+        Thread floorThread = new Thread(floor, "Floor");
 
         schedulerThread.start();
         elevatorThread.start();
