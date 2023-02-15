@@ -18,7 +18,7 @@ public class Simulator{
         Floor floor;
         File file;
 
-        file = new File("commandFile.txt");
+        file = new File("t.txt");
         elevator = new Elevator(scheduler, 42);
         floor = new Floor(scheduler, file);
 

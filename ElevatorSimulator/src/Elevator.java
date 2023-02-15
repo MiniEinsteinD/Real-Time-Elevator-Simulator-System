@@ -11,6 +11,8 @@ public class Elevator implements Runnable{
     private Scheduler scheduler; //Represents the shared scheduler between the elevator and the floor
     private int id; //Represents the id of the elevator
 
+    private ElevatorState state; //state of the elevator
+
     /**
      * Constructs and elevator using a scheduler and id
      *
@@ -20,6 +22,7 @@ public class Elevator implements Runnable{
     public Elevator(Scheduler scheduler, int id) {
         this.scheduler = scheduler;
         this.id = id;
+        state = new ElevatorState();
     }
 
     /**
@@ -48,5 +51,13 @@ public class Elevator implements Runnable{
             }
 
         }
+    }
+
+    /**
+     * Getter method for the state of elevator
+     * @return the ElevatorState of the elevator
+     */
+    public ElevatorState getState() {
+        return state;
     }
 }
