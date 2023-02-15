@@ -13,6 +13,8 @@ public class Elevator implements Runnable{
 
     private ElevatorState state; //state of the elevator
 
+    private List<Command> commands;
+
     /**
      * Constructs and elevator using a scheduler and id
      *
@@ -23,6 +25,7 @@ public class Elevator implements Runnable{
         this.scheduler = scheduler;
         this.id = id;
         state = new ElevatorState();
+        commands = new ArrayList<>():
     }
 
     /**
@@ -35,15 +38,42 @@ public class Elevator implements Runnable{
 
         while (!scheduler.shouldExit()) {
             Command command = scheduler.getCommand();
+            commands.add(command);
             System.out.println("Elevator received Command:\n" + command + "\n");
+
+            //Checks whether the elevator should go up or down
+            if (state.getFloorLevel() > command.getFloor()) {
+                state.setDirection(Direction.DOWN);
+            else {
+                state.setDirection(Direction.UP)
+            }
+
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
             }
 
-            System.out.println("Elevator finished Command:\n" + command + "\n");
+            //Checks if a command is serviced
+            for (int i = 0; i < commands.size(); i++) {
+                if (state.getFloorLever() == commands.get(i).getFloor()) {
+                    scheduler.placeServicedCommand(commands.get(i));
+                    System.out.println("Elevator finished Command:\n" + commands.get(i) + "\n");
+                    commands.remove(i);
+                }
+            }
 
-            scheduler.placeServicedCommand(command);
+            // Elevator goes up or down based on the direction of the elevator.
+            if (state.getDirection() == Direction.UP && state.getIdleStatus() == false) {
+                state.goUp(); //Increments the current floor level of the elevator by 1.
+                state.setIdleStatus(false);
+            }
+            else {
+                state.goDown(); //Decrements the current floor level of the elevator by 1.
+            }
+
+            // Sets idle status to true if there are no requests
+            if (commands.size() == 0)
+                state.setIdleStatus(true);
 
             try {
                 Thread.sleep(500);
