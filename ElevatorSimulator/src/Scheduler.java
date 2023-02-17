@@ -153,4 +153,23 @@ public class Scheduler implements Runnable {
     public synchronized void setElevator(Elevator elevator) {
         this.elevator = elevator;
     }
+    
+    
+    /**
+     * Method used to add a list of commands that need to be
+     * serviced
+     * @param commandList arrayList of commands to be serviced
+     */
+    public void placeCommandList(ArrayList<Command> commandList) {
+        while (!commands.isEmpty()) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                System.err.println(e);
+            }
+        }
+        System.out.println("Scheduler has received the command list from the floor subsystem:\n");
+        commands = new ArrayList<>(commandList);
+        notifyAll();
+    }
 }
