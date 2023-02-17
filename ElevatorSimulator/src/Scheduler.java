@@ -23,8 +23,8 @@ public class Scheduler implements Runnable {
      */
     public Scheduler (){
 
-        this.commands = new ArrayList<>();
-        this.servicedCommands = new ArrayList<>();
+        this.commands = new ArrayList<Command>();
+        this.servicedCommands = new ArrayList<Command>();
         this.exitStatus = false;
     }
 
@@ -40,7 +40,7 @@ public class Scheduler implements Runnable {
                 System.err.println(e);
             }
         }
-        System.out.println("Scheduler has received the following command from the floor subsystem:\n " + command);
+        System.out.println("Scheduler has received the following command from the floor subsystem:\n" + command);
         commands.add(command);
         notifyAll();
     }
@@ -58,7 +58,7 @@ public class Scheduler implements Runnable {
             }
         }
         Command command = commands.remove(0);
-        System.out.println("Scheduler has passed the following command to the elevator :\n "
+        System.out.println("Scheduler has passed the following command to the elevator :\n"
                 + command);
         notifyAll();
         return command;
@@ -67,7 +67,7 @@ public class Scheduler implements Runnable {
     /**
      * To be completed at a different iteration
      */
-    @Override
+    //@Override
     public void run() {
 
     }
@@ -85,7 +85,7 @@ public class Scheduler implements Runnable {
                 System.err.println(e);
             }
         }
-        System.out.println("Elevator has finished servicing the following command:\n " + command);
+        System.out.println("Elevator has finished servicing the following command:\n" + command);
         servicedCommands.add(command);
         notifyAll();
     }
@@ -103,7 +103,7 @@ public class Scheduler implements Runnable {
             }
         }
         Command command = servicedCommands.remove(0);
-        System.out.println("Floor subsystem has been notified that the following command has been serviced:\n "
+        System.out.println("Floor subsystem has been notified that the following command has been serviced:\n"
                 + command);
         notifyAll();
         return command;

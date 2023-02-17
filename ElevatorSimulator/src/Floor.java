@@ -29,7 +29,7 @@ import java.util.ArrayList;
      * Continuously sends commands and receives responses from the scheduler until
      * there are no more commands
      */
-    @Override
+    //@Override
     public void run() {
 
         // read lines from file and store them as strings in an ArrayList
@@ -39,7 +39,7 @@ import java.util.ArrayList;
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
-        ArrayList<String> listOfLines = new ArrayList<>();
+        ArrayList<String> listOfLines = new ArrayList<String>();
 
         String line = null;
         try {
