@@ -1,5 +1,9 @@
 import static org.junit.Assert.*;
 
+/**
+ * Unit tests for the ElevatorState class. The constructor, getter methods, and setter methods
+ * are tests in this class.
+ */
 public class ElevatorStateTest {
 
     @org.junit.Test
