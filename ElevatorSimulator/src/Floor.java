@@ -12,6 +12,7 @@ import java.util.ArrayList;
     private File file; // File stores the commands that needs to be processed
     private boolean ordersFinished; // boolean expression that represent that the command finished executing
     private Scheduler scheduler; // The shared scheduler between the elevator and the floor
+    private ArrayList<Command> commandList; //List of all commands found in the text file
 
     /**
      * Constructs a floor using the scheduler and a file
@@ -22,6 +23,7 @@ import java.util.ArrayList;
         this.file =  file;
         this.ordersFinished = false;
         this.scheduler = scheduler;
+        commandList = new ArrayList<>();
     }
 
     /**
@@ -61,10 +63,12 @@ import java.util.ArrayList;
             throw new RuntimeException(e);
         }
 
+        //create a command from each line read from the text file
         for(String command: listOfLines){
-            scheduler.placeCommand(new Command(command));
-            Command servicedCommand = scheduler.getServicedCommand();
+            commandList.add(new Command(command));
         }
+        //send all the commands to the scheduler
+        scheduler.placeCommandList(commandList);
         scheduler.exitThreads();
     }
 
