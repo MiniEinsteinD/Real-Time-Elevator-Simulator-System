@@ -57,7 +57,7 @@ public class Elevator implements Runnable{
      * Getter method for the state of elevator
      * @return the ElevatorState of the elevator
      */
-    public ElevatorState getState() {
+    public synchronized ElevatorState getState() {
         return state;
     }
 }
