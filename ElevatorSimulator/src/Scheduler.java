@@ -14,6 +14,8 @@ public class Scheduler implements Runnable {
     private List<Command> servicedCommands; //The list of commands already serviced by the elevators
     private boolean exitStatus;
 
+    private Elevator elevator;
+
 
     /**
      * Constructor for Scheduler object that initializes the list of commands which stores all commands
@@ -124,4 +126,11 @@ public class Scheduler implements Runnable {
         return exitStatus;
     }
 
+    /**
+     * Sets the elevator that is connected to the Scheduler
+     * @param elevator The elevator connected to the scheduler
+     */
+    public void setElevator(Elevator elevator) {
+        this.elevator = elevator;
+    }
 }
