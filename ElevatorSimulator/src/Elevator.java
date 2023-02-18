@@ -37,14 +37,14 @@ public class Elevator implements Runnable{
     public void run() {
 
         while (!scheduler.shouldExit()) {
-            Command command = scheduler.getCommand();
-            commands.add(command);
-            System.out.println("Elevator received Command:\n" + command + "\n");
+            //Command command = scheduler.getCommand();
+            //commands.add(command);
 
             //Checks whether the elevator should go up or down
-            if (state.getFloorLevel() > command.getFloor()) {
+            if (!state.getIdleStatus() && state.getFloorLevel() > commands.get(0).getFloor()) {
                 state.setDirection(Direction.DOWN);
-            else {
+            }
+            else{
                 state.setDirection(Direction.UP)
             }
 
@@ -54,31 +54,20 @@ public class Elevator implements Runnable{
             }
 
             //Checks if a command is serviced
-            for (int i = 0; i < commands.size(); i++) {
-                if (state.getFloorLever() == commands.get(i).getFloor()) {
-                    scheduler.placeServicedCommand(commands.get(i));
-                    System.out.println("Elevator finished Command:\n" + commands.get(i) + "\n");
-                    commands.remove(i);
+            for (Command command: commands) {
+                if (state.getFloorLevel() == command.getFloor()) {
+                    removeCommand(command);
                 }
             }
 
-            // Elevator goes up or down based on the direction of the elevator.
-            if (state.getDirection() == Direction.UP && state.getIdleStatus() == false) {
-                state.goUp(); //Increments the current floor level of the elevator by 1.
-                state.setIdleStatus(false);
-            }
-            else {
-                state.goDown(); //Decrements the current floor level of the elevator by 1.
-            }
+            incrementFloor(); //Increments floor based on idle status and direction
 
-            // Sets idle status to true if there are no requests
-            if (commands.size() == 0)
-                state.setIdleStatus(true);
 
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
             }
+
 
         }
     }
@@ -90,4 +79,44 @@ public class Elevator implements Runnable{
     public ElevatorState getState() {
         return state;
     }
+
+    /**
+     * Adds a command to the commands list
+     * @param command the command that will be added to commands
+     */
+    public void putCommand(Command command){
+        commands.add(command);
+        System.out.println("Elevator received Command:\n" + command + "\n");
+        state.setIdleStatus(false);
+    }
+
+    /**
+     * Removes a command from the commands list
+     * @param command the command that will be removed from commands
+     */
+    private void removeCommand(Command command){
+        System.out.println("Elevator finished Command:\n" + command + "\n");
+        scheduler.placeServicedCommand(command);
+        commands.remove(command);
+        if (commands.isEmpty()) {
+            state.setIdleStatus(true);
+        }
+    }
+
+    /**
+     * Moves the elevator up or down based on the direction and idle
+     * status of the elevator
+     */
+    private void incrementFloor(){
+        // Elevator goes up or down based on the direction of the elevator.
+        if (state.getIdleStatus())
+            return;
+        if (state.getDirection() == Direction.UP {
+            state.goUp(); //Increments the current floor level of the elevator by 1.
+        } else {
+            state.goDown(); //Decrements the current floor level of the elevator by 1.
+        }
+        System.out.println("Elevator is now on floor: " + state.getFloorLevel()));
+    }
+
 }
