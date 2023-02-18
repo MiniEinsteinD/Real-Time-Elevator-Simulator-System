@@ -111,7 +111,7 @@ public class Elevator implements Runnable{
         // return if the elevator is idle.
         if (state.getIdleStatus())
             return;
-        if (state.getDirection() == Direction.UP {
+        if (state.getDirection() == Direction.UP) {
             state.goUp(); //Increments the current floor level of the elevator by 1.
         } else {
             state.goDown(); //Decrements the current floor level of the elevator by 1.
