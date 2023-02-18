@@ -53,14 +53,14 @@ public class Elevator implements Runnable{
             } catch (InterruptedException e) {
             }
 
-            //Checks if a command is serviced
+            //Checks if a command is serviced, and removes it if it is serviced
             for (Command command: commands) {
                 if (state.getFloorLevel() == command.getFloor()) {
                     removeCommand(command);
                 }
             }
 
-            incrementFloor(); //Increments floor based on idle status and direction
+            moveFloor(); //Moves floor based on idle status and direction
 
 
             try {
@@ -107,8 +107,8 @@ public class Elevator implements Runnable{
      * Moves the elevator up or down based on the direction and idle
      * status of the elevator
      */
-    private void incrementFloor(){
-        // Elevator goes up or down based on the direction of the elevator.
+    private void moveFloor(){
+        // return if the elevator is idle.
         if (state.getIdleStatus())
             return;
         if (state.getDirection() == Direction.UP {
