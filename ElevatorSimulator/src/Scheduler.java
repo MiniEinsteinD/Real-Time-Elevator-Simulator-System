@@ -66,7 +66,16 @@ public class Scheduler implements Runnable {
 
     
     /**
-     * To be completed at a different iteration
+     * Method that runs when the Scheduler thread is started.
+     *
+     * Waits until the Elevator thread is idle, then assigns
+     * it the correct command based on its state.
+     *
+     * Returns when there are no commands and it was signalled
+     * to exit by the Floor.
+     *
+     * @author Ethan Leir 101146422
+     * @version 1.0
      */
     //@Override
     public void run() {
