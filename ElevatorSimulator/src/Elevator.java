@@ -13,6 +13,8 @@ public class Elevator implements Runnable{
 
     private ElevatorState state; //state of the elevator
 
+    private Command command;
+
     /**
      * Constructs and elevator using a scheduler and id
      *
@@ -23,6 +25,7 @@ public class Elevator implements Runnable{
         this.scheduler = scheduler;
         this.id = id;
         state = new ElevatorState();
+        command = null;
     }
 
     /**
@@ -34,21 +37,24 @@ public class Elevator implements Runnable{
     public void run() {
 
         while (!scheduler.shouldExit()) {
-            Command command = scheduler.getCommand();
-            System.out.println("Elevator received Command:\n" + command + "\n");
+            Command command = getCommand();
+            //commands.add(command);
+
+            //Checks whether the elevator should go up or down
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
             }
 
-            System.out.println("Elevator finished Command:\n" + command + "\n");
-
-            scheduler.placeServicedCommand(command);
-
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
+            //Checks if a command is serviced, and removes it if it is serviced
+            if (state.getFloorLevel() == command.getFloor()) {
+                System.out.println("Elevator finished Command:\n" + command + "\n");
+                //scheduler.placeServicedCommand(command);
+                //command = null;
+                //state.setIdleStatus(true);
             }
+
+            moveFloor(command); //Moves floor based on idle status and direction
 
         }
     }
@@ -60,4 +66,53 @@ public class Elevator implements Runnable{
     public synchronized ElevatorState getState() {
         return state;
     }
+
+    /**
+     * Adds a command to the commands list
+     * @param command the command that will be added to commands
+     */
+    public synchronized void putCommand(Command command){
+        this.command = command;
+        System.out.println("Elevator received Command:\n" + command + "\n");
+        state.setIdleStatus(false);
+        if (state.getFloorLevel() > command.getFloor()) {
+            state.setDirection(Direction.DOWN);
+        }
+        else{
+            state.setDirection(Direction.UP);
+        }
+        notifyAll();
+    }
+
+    /**
+     * Gets the command from the elevator
+     * @return the command from the elevator
+     */
+    public synchronized Command getCommand(){
+        state.setIdleStatus(true);
+        while (state.isIdleStatus()){
+            try {
+                wait();
+            } catch (InterruptedException e) {
+            }
+        }
+        Command temp = command;
+        command = null;
+        return temp;
+    }
+
+
+    /**
+     * Moves the elevator up or down based on the direction and idle
+     * status of the elevator
+     * @param command the Command to execute
+     */
+    private void moveFloor(Command command){
+        // return if the elevator is idle.
+        if (state.isIdleStatus())
+            return;
+        state.setFloorLevel(command.getFloor());
+        System.out.println("Elevator is now on floor: " + state.getFloorLevel() + "\n");
+    }
+
 }
