@@ -56,6 +56,20 @@ public class ElevatorState {
     }
 
     /**
+     * Go up 1 floor
+     */
+    public void goUp() {
+        this.floorLevel++;
+    }
+
+    /**
+     * Go down 1 floor
+     */
+    public void goDown() {
+        this.floorLevel--;
+    }
+
+    /**
      * Getter method for the status of elevator
      * @return true if elevator is idle, false otherwise
      */
