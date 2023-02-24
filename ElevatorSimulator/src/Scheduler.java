@@ -151,4 +151,76 @@ public class Scheduler implements Runnable {
         commands = new ArrayList<>(commandList);
         notifyAll();
     }
+        private synchronized Command findBestCommand(ElevatorState state) {
+
+        while (commands.isEmpty()) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        Command closest = null;
+
+        ArrayList<Command> upCommands = new ArrayList<>();
+
+        ArrayList<Command> downCommands = new ArrayList<>();
+
+        for (int i = 0; i < commands.size(); i++) {
+
+            if (commands.get(i).getDirectionButton() == Direction.UP) {
+                upCommands.add(commands.get(i));
+            }
+            if (commands.get(i).getDirectionButton() == Direction.DOWN) {
+                downCommands.add(commands.get(i));
+            }
+        }
+
+        if (upCommands.isEmpty()) {
+            state.setDirection(Direction.DOWN);
+        }
+
+        if (downCommands.isEmpty()) {
+            state.setDirection(Direction.UP);
+        }
+
+        if (state.getDirection() == Direction.UP) {
+            closest = upCommands.get(0);
+            for (Command upCommand : upCommands) {
+                if (Math.abs(upCommand.getFloor() - state.getFloorLevel()) < Math.abs(closest.getFloor() - state.getFloorLevel())) {
+                    closest = upCommand;
+                    removeCommand(upCommand);
+
+                }
+            }
+            return closest;
+        }
+
+
+        if (state.getDirection() == Direction.DOWN) {
+            closest = downCommands.get(0);
+            for (Command downCommand : downCommands) {
+                if (Math.abs(downCommand.getFloor() - state.getFloorLevel()) < Math.abs(closest.getFloor() - state.getFloorLevel())) {
+                    closest = downCommand;
+                }
+            }
+            removeCommand(closest);
+            return closest;
+        }
+
+        return null;
+    }
+
+    /**
+     * Searches for the target command passed in as the parameter, if detected remove this element and return void
+     * @param command target command
+     */
+    private void removeCommand(Command command){
+        for (int i = 0; i < commands.size(); i++){
+            if(commands.get(i) == command){
+                commands.remove(i);
+            }
+        }
+    }
 }
