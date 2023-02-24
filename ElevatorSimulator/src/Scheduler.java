@@ -11,7 +11,7 @@ import java.util.List;
 public class Scheduler implements Runnable {
 
     private List<Command> commands; //The list storing all commands in the system
-    private List<Command> servicedCommands; //The list of commands already serviced by the elevators
+    private List<Command> servicedCommands; //The list of commands already serviced by the elevators (deprecated)
     private boolean exitStatus;
 
     private Elevator elevator;
@@ -64,18 +64,46 @@ public class Scheduler implements Runnable {
         return command;
     }
 
+    
     /**
-     * To be completed at a different iteration
+     * Method that runs when the Scheduler thread is started.
+     *
+     * Waits until the Elevator thread is idle, then assigns
+     * it the correct command based on its state.
+     *
+     * Returns when there are no commands and it was signalled
+     * to exit by the Floor.
+     *
+     * @author Ethan Leir 101146422
+     * @version 1.0
      */
     //@Override
     public void run() {
-
+    	boolean running = true;
+    	while (running) {
+    		while (!elevator.getState().isIdleStatus()) {
+    			// Wait for it to be idle.
+    			try {
+					Thread.sleep(50); // Could be a wait so that when the elevator notifies the scheduler we're not doing nothing.
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+    		}
+    		
+    		elevator.putCommand(findBestCommand(elevator.getState())); // Add command to the Elevator's list of commands then set idle status and notifyall()
+    		
+    		// Might need to adjust the behaviour so that the Elevators can exit.
+    		if (shouldExit()) {
+    			running = false;
+    		}
+    	}
     }
 
     /**
      * Method used to add commands already serviced by elevator
      * to the ArrayList of commands
      * @param command
+     * deprecated
      */
     public synchronized void placeServicedCommand(Command command){
         while (!servicedCommands.isEmpty()) {
@@ -93,6 +121,7 @@ public class Scheduler implements Runnable {
     /**
      * Method used to obtain the commands already serviced by the elevator
      * @return The next command which will be serviced (index 0)
+     * deprecated
      */
     public synchronized Command getServicedCommand() {
         while (servicedCommands.isEmpty()) {
@@ -121,19 +150,20 @@ public class Scheduler implements Runnable {
      * shouldExit returns whether it is time to end the threads or not
      * @return true if it time to end the threads, false otherwise.
      */
-    public boolean shouldExit()
+    public synchronized boolean shouldExit()
     {
-        return exitStatus;
+        return exitStatus && commands.isEmpty();
     }
 
     /**
      * Sets the elevator that is connected to the Scheduler
      * @param elevator The elevator connected to the scheduler
      */
-    public void setElevator(Elevator elevator) {
+    public synchronized void setElevator(Elevator elevator) {
         this.elevator = elevator;
     }
-
+    
+    
     /**
      * Method used to add a list of commands that need to be
      * serviced
