@@ -84,7 +84,7 @@ public class Scheduler implements Runnable {
     		elevator.putCommand(findBestCommand(elevator.getState())); // Add command to the Elevator's list of commands then set idle status and notifyall()
     		
     		// Might need to adjust the behaviour so that the Elevators can exit.
-    		if (shouldExit() && commands.isEmpty()) {
+    		if (shouldExit()) {
     			running = false;
     		}
     	}
@@ -143,7 +143,7 @@ public class Scheduler implements Runnable {
      */
     public synchronized boolean shouldExit()
     {
-        return exitStatus;
+        return exitStatus && commands.isEmpty();
     }
 
     /**
