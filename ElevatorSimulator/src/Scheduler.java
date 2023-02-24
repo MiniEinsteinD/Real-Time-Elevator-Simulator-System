@@ -191,7 +191,7 @@ public class Scheduler implements Runnable {
      * @author Hasan Al-Hasoo
      * @version 1.1
      */
-        private synchronized Command findBestCommand(ElevatorState state) {
+    private synchronized Command findBestCommand(ElevatorState state) {
 
         while (commands.isEmpty()) {
             try {
