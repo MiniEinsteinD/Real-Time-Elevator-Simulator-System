@@ -13,7 +13,7 @@ public class Elevator implements Runnable{
 
     private ElevatorState state; //state of the elevator
 
-    private List<Command> commands;
+    private Command command;
 
     /**
      * Constructs and elevator using a scheduler and id
@@ -25,7 +25,7 @@ public class Elevator implements Runnable{
         this.scheduler = scheduler;
         this.id = id;
         state = new ElevatorState();
-        commands = new ArrayList<>():
+        command = null:
     }
 
     /**
@@ -41,33 +41,22 @@ public class Elevator implements Runnable{
             //commands.add(command);
 
             //Checks whether the elevator should go up or down
-            if (!state.getIdleStatus() && state.getFloorLevel() > commands.get(0).getFloor()) {
-                state.setDirection(Direction.DOWN);
-            }
-            else{
-                state.setDirection(Direction.UP)
-            }
-
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-            }
-
-            //Checks if a command is serviced, and removes it if it is serviced
-            for (Command command: commands) {
-                if (state.getFloorLevel() == command.getFloor()) {
-                    removeCommand(command);
+            if (state.getIdleStatus()) {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
                 }
+
+                //Checks if a command is serviced, and removes it if it is serviced
+                if (state.getFloorLevel() == command.getFloor()) {
+                    System.out.println("Elevator finished Command:\n" + command + "\n");
+                    scheduler.placeServicedCommand(command);
+                    //command = null;
+                    state.setIdleStatus(true);
+                }
+
+                moveFloor(); //Moves floor based on idle status and direction
             }
-
-            moveFloor(); //Moves floor based on idle status and direction
-
-
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-            }
-
 
         }
     }
@@ -84,24 +73,36 @@ public class Elevator implements Runnable{
      * Adds a command to the commands list
      * @param command the command that will be added to commands
      */
-    public void putCommand(Command command){
-        commands.add(command);
+    public synchronized void putCommand(Command command){
+        this.command = command;
         System.out.println("Elevator received Command:\n" + command + "\n");
         state.setIdleStatus(false);
+        if (state.getFloorLevel() > command.getFloor()) {
+            state.setDirection(Direction.DOWN);
+        }
+        else{
+            state.setDirection(Direction.UP)
+        }
+        notifyAll();
     }
 
     /**
-     * Removes a command from the commands list
-     * @param command the command that will be removed from commands
+     * Gets the command from the elevator
+     * @return the command from the elevator
      */
-    private void removeCommand(Command command){
-        System.out.println("Elevator finished Command:\n" + command + "\n");
-        scheduler.placeServicedCommand(command);
-        commands.remove(command);
-        if (commands.isEmpty()) {
-            state.setIdleStatus(true);
+    public synchronized Command getCommand(){
+        state.setIdleStatus(true);
+        while (state.getIdleStatus()){
+            try {
+                wait();
+            } catch (InterruptedException e) {
+            }
         }
+        Command temp = command;
+        command = null;
+        return temp;
     }
+
 
     /**
      * Moves the elevator up or down based on the direction and idle
