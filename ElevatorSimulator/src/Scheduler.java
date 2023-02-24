@@ -151,6 +151,16 @@ public class Scheduler implements Runnable {
         commands = new ArrayList<>(commandList);
         notifyAll();
     }
+    
+    /**
+     * Method that finds the command whose floor level is closest to the state parameter passed in. The directions of
+     * the found command and the state must both match. If so, return the closest command so the elevator can service it.
+     * Otherwise, if no suitable command is found, return null
+     * @param state is the current state of the elevator
+     * @return the command whose closest in floor level and pertains to the same direction as state
+     * @author Hasan Al-Hasoo
+     * @version 1.1
+     */
         private synchronized Command findBestCommand(ElevatorState state) {
 
         while (commands.isEmpty()) {
@@ -190,10 +200,9 @@ public class Scheduler implements Runnable {
             for (Command upCommand : upCommands) {
                 if (Math.abs(upCommand.getFloor() - state.getFloorLevel()) < Math.abs(closest.getFloor() - state.getFloorLevel())) {
                     closest = upCommand;
-                    removeCommand(upCommand);
-
                 }
             }
+            removeCommand(upCommand);
             return closest;
         }
 
