@@ -169,7 +169,7 @@ public class Scheduler implements Runnable {
      * serviced
      * @param commandList arrayList of commands to be serviced
      */
-    public void placeCommandList(ArrayList<Command> commandList) {
+    public synchronized void placeCommandList(ArrayList<Command> commandList) {
         while (!commands.isEmpty()) {
             try {
                 wait();
@@ -191,7 +191,7 @@ public class Scheduler implements Runnable {
      * @author Hasan Al-Hasoo
      * @version 1.1
      */
-        private synchronized Command findBestCommand(ElevatorState state) {
+    private synchronized Command findBestCommand(ElevatorState state) {
 
         while (commands.isEmpty()) {
             try {
@@ -232,7 +232,7 @@ public class Scheduler implements Runnable {
                     closest = upCommand;
                 }
             }
-            removeCommand(upCommand);
+            removeCommand(closest);
             return closest;
         }
 
