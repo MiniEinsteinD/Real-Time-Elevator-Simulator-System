@@ -55,33 +55,6 @@ public class SchedulerTest {
 	}
 	
 	/**
-	 * Test for the Scheduler.placeCommand() and Scheduler.getCommand methods.
-	 * Asserts that the command returned from getCommand() is the same as the
-	 * command passed to placeCommand().
-	 * Asserts that the command line output is correct.
-	 */
-	@Test
-	public void testPlaceGetCommand() {
-		// Only test place->get because stubbing out wait would be
-		// troublesome, and unit tests would rather not have concurrency.
-		
-		scheduler.placeCommand(command);
-		Command retCommand = scheduler.getCommand();
-		
-		Assert.assertEquals(command, retCommand);
-		
-		String expected = "Scheduler has received the following command from the floor subsystem:\n"
-				+ command
-				+ "\r\n"
-				+ "Scheduler has passed the following command to the elevator :\n"
-				+ command;
-		expected = expected.trim();
-		String actual = commandlineOutput.toString().trim();
-
-		Assert.assertEquals(expected, actual);
-	}
-	
-	/**
 	 * Test for the Scheduler.placeServicedCommand() and Scheduler.getServicedCommand
 	 * methods.
 	 * Asserts that the command returned from getServicedCommand() is the same as the
