@@ -14,7 +14,7 @@ public class Scheduler implements Runnable {
     private List<Command> servicedCommands; //The list of commands already serviced by the elevators (deprecated)
     private boolean exitStatus;
 
-    private Elevator elevator;
+    private Elevator elevator; //the elevator that the scheduler is communicating with
 
 
     /**
@@ -170,9 +170,9 @@ public class Scheduler implements Runnable {
      * @param commandList arrayList of commands to be serviced
      */
     public void placeCommandList(ArrayList<Command> commandList) {
-        while (!commands.isEmpty()) {
+        while (!commands.isEmpty()) { //makes sure that command list is empty before adding the new list of commands
             try {
-                wait();
+                wait(); /
             } catch (InterruptedException e) {
                 System.err.println(e);
             }

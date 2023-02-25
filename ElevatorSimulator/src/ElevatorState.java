@@ -9,9 +9,9 @@
  */
 public class ElevatorState {
 
-    private Direction direction;
-    private int floorLevel;
-    private boolean idleStatus;
+    private Direction direction; //direction the elevator is going toward
+    private int floorLevel; //the floor the elevator is currently at
+    private boolean idleStatus; // whether elevator is servicing a command or not
 
     /**
      * Constructor for class ElevatorState. The initial state has the following info:
