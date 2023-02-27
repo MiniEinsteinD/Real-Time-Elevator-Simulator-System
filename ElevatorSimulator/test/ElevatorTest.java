@@ -44,9 +44,9 @@ public class ElevatorTest {
 		schedulerMock = mock(Scheduler.class);
 		when(schedulerMock.getCommand()).thenReturn(this.command);
 		when(schedulerMock.shouldExit()).thenAnswer(
-			     new Answer() {
+			     new Answer<Boolean>() {
 			    	 private int n = 0;
-			         public Object answer(InvocationOnMock invocation) {
+			         public Boolean answer(InvocationOnMock invocation) {
 			             Object[] args = invocation.getArguments();
 			             Object mock = invocation.getMock();
 			             
