@@ -172,7 +172,7 @@ public class Scheduler implements Runnable {
     public void placeCommandList(ArrayList<Command> commandList) {
         while (!commands.isEmpty()) { //makes sure that command list is empty before adding the new list of commands
             try {
-                wait(); /
+                wait();
             } catch (InterruptedException e) {
                 System.err.println(e);
             }
