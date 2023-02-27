@@ -29,6 +29,7 @@ public class Scheduler implements Runnable {
     /**
      * Method used to add commands to the ArrayList of commands
      * @param command
+     * (deprecated)
      */
     public synchronized void placeCommand(Command command){
         while (!commands.isEmpty()) {
@@ -140,15 +141,8 @@ public class Scheduler implements Runnable {
      * @param commandList arrayList of commands to be serviced
      */
     public synchronized void placeCommandList(ArrayList<Command> commandList) {
-        while (!commands.isEmpty()) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                System.err.println(e);
-            }
-        }
-        System.out.println("Scheduler has received the command list from the floor subsystem:\n");
-        commands = new ArrayList<>(commandList);
+        System.out.println("Scheduler has received the command list from the floor subsystem.\n");
+        commands.addAll(commandList);
         notifyAll();
     }
     
