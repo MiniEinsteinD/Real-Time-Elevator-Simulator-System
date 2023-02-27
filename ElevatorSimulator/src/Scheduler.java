@@ -172,7 +172,7 @@ public class Scheduler implements Runnable {
      */
     public synchronized void placeCommandList(ArrayList<Command> commandList) {
         System.out.println("Scheduler has received the command list from the floor subsystem.\n");
-        commands = new ArrayList<>(commandList);
+        commands.addAll(commandList);
         notifyAll();
     }
     
