@@ -26,7 +26,7 @@ Group Responsibilities Iteration 2 (Current Iteration):
 Hasan: findBestCommand() method, reviewed Scheduler run(), README.txt (getCommand() and putCommand() methods reworked completely by Ali, Daniah)
 Ali: Elevator Class and JUnit tests
 Daniah: Elevator Class and JUnit tests, sequence diagram
-Mohammed: Created State Class
+Mohammed: ElevatorState Class, ElevatorStateTest, updated Floor Class
 Ethan: Scheduler run(), JUnit tests, fixed bugs and helped others complete tasks
 
 Pair #1: Ali, Daniah
