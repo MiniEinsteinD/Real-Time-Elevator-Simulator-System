@@ -120,6 +120,7 @@ public class Elevator implements Runnable{
             state.setIdleStatus(true); //Set idle status to true since the command is done
         }
         notifyAll();
+
     }
 
 }
