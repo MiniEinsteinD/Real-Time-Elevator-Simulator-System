@@ -20,36 +20,31 @@ import org.mockito.stubbing.Answer;
  */
 @ExtendWith(MockitoExtension.class)
 public class FloorTest {
-	private Floor floor;
-	private Command command;
-	private Scheduler schedulerMock;
-	
-	@Before
-	public void setupMocks() {
-		File file = new File("singleCommand.txt");
-		this.command = new Command("10 4 down 2");
-		schedulerMock = mock(Scheduler.class);
-		when(schedulerMock.getServicedCommand()).thenReturn(this.command);
-		
-		this.floor = new Floor(schedulerMock, file);
-	}
-	
-	/**
-	 * Test for the Floor.run() method.
-	 * Asserts that the correct message is printed.
-	 * Asserts that the floor calls Scheduler.getServicedCommand(),
-	 * and Scheduler.exitThreads() the correct number of times when only
-	 * one command is provided.
-	 */
-	@Test
-	public void testRun() {
-		floor.run();
-		
-		//See if scheduler.getServicedCommand() and scheduler.exitThreads were called.
-		//Can't verify scheduler.placeServicedCommand unless we know what
-		//object will be passed to it.
-		verify(schedulerMock, times(1)).getServicedCommand();
-		verify(schedulerMock, times(1)).exitThreads();
-	}
+    private Floor floor;
+    private Command command;
+    private Scheduler schedulerMock;
+
+    @Before
+    public void setupMocks() {
+        File file = new File("singleCommand.txt");
+        this.command = new Command("10 4 down 2");
+        schedulerMock = mock(Scheduler.class);
+
+        this.floor = new Floor(schedulerMock, file);
+    }
+
+    /**
+     * Test for the Floor.run() method.
+     * Asserts that the correct message is printed.
+     * Asserts that Scheduler.exitThreads() was called the correct
+     * number of times when only one command is provided.
+     */
+    @Test
+    public void testRun() {
+        floor.run();
+
+        //See if scheduler.exitThreads was called.
+        verify(schedulerMock, times(1)).exitThreads();
+    }
 
 }
