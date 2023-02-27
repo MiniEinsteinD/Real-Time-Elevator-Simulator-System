@@ -6,6 +6,7 @@ The File Iteration1_Group5 Is Packaged In a ZIP Format Containing The Following 
 -README.txt
 -UML Class Diagram
 -UML Sequence Diagram
+-UML State Diagram
 -Test Instructions (.txt format) 
 -Code (Product) Packaged In a Zip Format
 
