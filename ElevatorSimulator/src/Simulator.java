@@ -18,9 +18,11 @@ public class Simulator{
         Floor floor;
         File file;
 
-        file = new File("t.txt");
+        file = new File("commandFile.txt");
         elevator = new Elevator(scheduler, 42);
         floor = new Floor(scheduler, file);
+        
+        scheduler.setElevator(elevator);
 
         Thread schedulerThread = new Thread(scheduler, "Scheduler");
         Thread elevatorThread = new Thread(elevator, "Elevator");

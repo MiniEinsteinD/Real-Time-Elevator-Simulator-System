@@ -1,11 +1,21 @@
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.junit.Assert;
+
+//Mockito imports to isolate Elevator
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.Answer;
 
 /**
  * Tests for the Scheduler class.
@@ -15,7 +25,14 @@ import org.junit.Assert;
  */
 public class SchedulerTest {
 	private Scheduler scheduler;
-	private Command command;
+	private Command command1;
+	private Command command2;
+	private Command command3;
+	
+	private ArrayList<Command> executedCommands;
+
+	private Elevator elevatorMock;
+	private ElevatorState elevatorStateMock;
 	
 	private final ByteArrayOutputStream commandlineOutput = new ByteArrayOutputStream();
 	private final PrintStream originalOutput = System.out;
@@ -25,8 +42,57 @@ public class SchedulerTest {
 	 */
 	@Before
 	public void setupScheduler() {
+		// Setup a Scheduler and two Commands to be used in the tests.
 		this.scheduler = new Scheduler();
-		this.command = new Command(5, 2, Direction.UP, 9);
+		this.command1 = new Command(5, 3, Direction.UP, 7);
+		this.command2 = new Command(5, 2, Direction.DOWN, 1);
+		this.command3 = new Command(5, 7, Direction.UP, 9);
+		
+		// Setup the buffer to store commands in the order they were given.
+		this.executedCommands = new ArrayList<Command>();
+		
+		// Setup Mock Elevator and ElevatorState objects
+		elevatorMock = mock(Elevator.class);
+		scheduler.setElevator(elevatorMock);
+		elevatorStateMock = mock(ElevatorState.class);
+		
+		// Stub Elevator.getState() so that it returns the mocked state.
+		when(elevatorMock.getState()).thenReturn(this.elevatorStateMock);
+		
+		// Stub ElevatorState.isIdle() so that it always returns that the elevator is idle.
+		when(elevatorStateMock.isIdleStatus()).thenReturn(true);
+		
+		// Stub Elevator.putCommand() so that it stores the command and
+		// immediately updates the floor level.
+		// We need a different syntax for any() params otherwise Mockito stops working.
+		doAnswer(
+				new Answer<Void>() {
+					public Void answer(InvocationOnMock invocation) {
+			             Object[] args = invocation.getArguments();
+			             Object mock = invocation.getMock();
+			             
+			             if (args[0] instanceof Command) {
+			            	 Command c = (Command) args[0];
+			            	 int level = c.getFloor();
+			            	 
+			            	 executedCommands.add(c);
+			            	 
+			            	 elevatorStateMock.setFloorLevel(level);
+			             }
+			             return null;
+					}
+				}).when(elevatorMock).putCommand(any(Command.class));
+		
+		// Let the rest of the important elevatorStateMock methods invoke their real counterpart
+		when(elevatorStateMock.getDirection()).thenCallRealMethod();
+		doCallRealMethod().when(elevatorStateMock).setDirection(any(Direction.class));
+		when(elevatorStateMock.getFloorLevel()).thenCallRealMethod();
+		doCallRealMethod().when(elevatorStateMock).setFloorLevel(anyInt());
+		
+		// ElevatorState constructor was never called. Initialize manually.
+		elevatorStateMock.setDirection(Direction.UP);
+		elevatorStateMock.setFloorLevel(1);
+		// Idle status unneeded.
 	}
 	
 	/**
@@ -47,11 +113,36 @@ public class SchedulerTest {
 
 	/**
 	 * Test for the Scheduler.run() method.
-	 * Currently does nothing.
+	 * Places two commands, calls run, then checks if the commands were
+	 * evaluated in the correct order, and that each ElevatorState.isIdleStatus()
+	 * and Elevator.putCommand() were called the correct number of times.
 	 */
 	@Test
 	public void testRun() {
-		//Nothing to do.
+		// Place the commands.
+		ArrayList<Command> commandList = new ArrayList<Command>();
+		commandList.add(command3);
+		commandList.add(command2);
+		commandList.add(command1);
+		scheduler.placeCommandList(commandList);
+		
+		// Let the Scheduler know that it can exit as soon as the commands are processed.
+		scheduler.exitThreads();
+		
+		// Execute tested function.
+		scheduler.run();
+		
+		// Check the order of commands.
+		Assert.assertEquals(command1, executedCommands.get(0));
+		Assert.assertEquals(command3, executedCommands.get(1));
+		Assert.assertEquals(command2, executedCommands.get(2));
+		
+		// Check that all immediately relevant functions were called the expected
+		// number of times.
+		verify(elevatorStateMock, times(3)).isIdleStatus();
+		verify(elevatorMock, times(1)).putCommand(command1);
+		verify(elevatorMock, times(1)).putCommand(command2);
+		verify(elevatorMock, times(1)).putCommand(command3);
 	}
 	
 	/**
@@ -65,44 +156,16 @@ public class SchedulerTest {
 		// Only test place->get because stubbing out wait would be
 		// troublesome, and unit tests would rather not have concurrency.
 		
-		scheduler.placeCommand(command);
+		scheduler.placeCommand(command1);
 		Command retCommand = scheduler.getCommand();
 		
-		Assert.assertEquals(command, retCommand);
+		Assert.assertEquals(command1, retCommand);
 		
 		String expected = "Scheduler has received the following command from the floor subsystem:\n"
-				+ command
+				+ command1
 				+ "\r\n"
 				+ "Scheduler has passed the following command to the elevator :\n"
-				+ command;
-		expected = expected.trim();
-		String actual = commandlineOutput.toString().trim();
-
-		Assert.assertEquals(expected, actual);
-	}
-	
-	/**
-	 * Test for the Scheduler.placeServicedCommand() and Scheduler.getServicedCommand
-	 * methods.
-	 * Asserts that the command returned from getServicedCommand() is the same as the
-	 * command passed to placeServicedCommand().
-	 * Asserts that the command line output is correct.
-	 */
-	@Test
-	public void testPlaceGetServicedCommand() {
-		// Only test place->get because stubbing out wait would be
-		// troublesome, and unit tests would rather not have concurrency.
-		
-		scheduler.placeServicedCommand(command);
-		Command retCommand = scheduler.getServicedCommand();
-		
-		Assert.assertEquals(command, retCommand);
-		
-		String expected = "Elevator has finished servicing the following command:\n"
-				+ command
-				+ "\r\n"
-				+ "Floor subsystem has been notified that the following command has been serviced:\n"
-				+ command;
+				+ command1;
 		expected = expected.trim();
 		String actual = commandlineOutput.toString().trim();
 
