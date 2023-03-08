@@ -146,7 +146,7 @@ public class SchedulerTest {
 	}
 	
 	/**
-	 * Test for the Scheduler.placeCommand() and Scheduler.getCommand methods.
+	 * Test for the Scheduler.placeCommand() and Scheduler.getCommand() methods.
 	 * Asserts that the command returned from getCommand() is the same as the
 	 * command passed to placeCommand().
 	 * Asserts that the command line output is correct.
@@ -170,6 +170,30 @@ public class SchedulerTest {
 		String actual = commandlineOutput.toString().trim();
 
 		Assert.assertEquals(expected, actual);
+	}
+	
+	/**
+	 * Test for the Scheduler.placeCommandList() method.
+	 * Asserts that the commands returned from getCommand are the same as the
+	 * commands passed to placeCommand().
+	 * Asserts that the command line output is correct.
+	 */
+	@Test
+	public void testPlaceCommandList() {
+		// Construct the list of commands and pass it to the scheduler.
+		ArrayList<Command> commandList = new ArrayList<Command>();
+		commandList.add(command1);
+		commandList.add(command2);
+		commandList.add(command3);
+		scheduler.placeCommandList(commandList);
+		
+		// Check if the scheduler returns the commands in the correct order (FIFO).
+		Command ret_command1 = scheduler.getCommand();
+		Command ret_command2 = scheduler.getCommand();
+		Command ret_command3 = scheduler.getCommand();
+		Assert.assertEquals(command1, ret_command1);
+		Assert.assertEquals(command2, ret_command2);
+		Assert.assertEquals(command3, ret_command3);
 	}
 	
 	/**
