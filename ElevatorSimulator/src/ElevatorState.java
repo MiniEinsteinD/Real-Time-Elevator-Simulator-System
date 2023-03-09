@@ -27,7 +27,7 @@ public class ElevatorState {
      * Getter method for the direction the elevator is moving towards
      * @return direction of elevator
      */
-    public synchronized Direction getDirection() {
+    public Direction getDirection() {
         return direction;
     }
 
@@ -35,7 +35,7 @@ public class ElevatorState {
      * Setter method for the direction the elevator is moving towards
      * @param direction the elvator will move toward
      */
-    public synchronized void setDirection(Direction direction) {
+    public void setDirection(Direction direction) {
         this.direction = direction;
     }
 
@@ -43,7 +43,7 @@ public class ElevatorState {
      * Getter method for the floor level the elevator is at
      * @return the floor level the elevator is currently at
      */
-    public synchronized int getFloorLevel() {
+    public int getFloorLevel() {
         return floorLevel;
     }
 
@@ -51,7 +51,7 @@ public class ElevatorState {
      * Setter method for the floor level the elevator will be at
      * @param floorLevel the floor level the elevator is will be at
      */
-    public synchronized void setFloorLevel(int floorLevel) {
+    public void setFloorLevel(int floorLevel) {
         this.floorLevel = floorLevel;
     }
 
@@ -73,7 +73,7 @@ public class ElevatorState {
      * Getter method for the status of elevator
      * @return true if elevator is idle, false otherwise
      */
-    public synchronized boolean isIdleStatus() {
+    public boolean isIdleStatus() {
         return idleStatus;
     }
 
@@ -81,7 +81,7 @@ public class ElevatorState {
      * Setter method for the status of elevator
      * @param idleStatus true if elevator is idle, false otherwise
      */
-    public synchronized void setIdleStatus(boolean idleStatus) {
+    public void setIdleStatus(boolean idleStatus) {
         this.idleStatus = idleStatus;
     }
 }
