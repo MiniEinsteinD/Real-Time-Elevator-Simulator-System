@@ -21,7 +21,7 @@ import java.net.*;
      * @param scheduler the shared scheduler between the elevator and the floor
      * @param file File type that stores the commands that needs to be processed
      */
-    public Floor(Scheduler scheduler,File file){
+    public Floor(File file){
         this.file =  file;
         commandList = new ArrayList<>();
         // Networking
@@ -112,4 +112,8 @@ import java.net.*;
         }
     }
 
+    public static void main(String args[]) {
+        Floor f = new Floor(new File ("commandFile.txt"));
+        f.startSubsystem();
+    }
 }
