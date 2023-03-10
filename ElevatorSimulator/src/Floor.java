@@ -108,6 +108,23 @@ import java.net.*;
             try {
                 bos.close();
             } catch (IOException ioe) {}
+        }
+
+        // Let the scheduler know we're done
+        try {
+            byte[] data = new byte[0];
+            // Send data to SchedulerReciever
+            sendPacket = new DatagramPacket(data, data.length, InetAddress.getLocalHost(), 23);
+            System.out.println("Floor: Sending commands to Scheduler subsystem.");
+            sendReceiveSocket.send(sendPacket);
+
+            // Recieve confirmation from SchedulerReciever.
+            byte[] response = new byte[100];
+            receivePacket = new DatagramPacket(response, response.length);
+            System.out.println("Floor: Receiving confirmation of completion from the Scheduler subsystem.");
+            sendReceiveSocket.receive(receivePacket);
+        } catch (IOException ioe) {} finally {
+            // Cleanup
             sendReceiveSocket.close();
         }
     }
