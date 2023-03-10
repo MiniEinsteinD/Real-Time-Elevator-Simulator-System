@@ -13,8 +13,8 @@ public class Scheduler implements Runnable {
     private List<Command> commands; //The list storing all commands in the system
     private List<Command> servicedCommands; //The list of commands already serviced by the elevators (deprecated)
     private boolean exitStatus;
-
     private Elevator elevator;
+
 
 
     /**
