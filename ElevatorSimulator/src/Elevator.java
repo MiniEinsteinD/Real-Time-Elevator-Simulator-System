@@ -36,6 +36,8 @@ public class Elevator implements Runnable{
 
     private DatagramSocket sendSocket, receiveSocket; //Send and recieve sockets to communicate with the scheduler
 
+    private List<Integer> destinationFloors;
+
     /**
      * Constructs and elevator using a scheduler and id
      *
@@ -47,6 +49,7 @@ public class Elevator implements Runnable{
         this.id = id;
         state = new ElevatorState();
         command = null;
+        destinationFloors = new ArrayList<Integer>();
 
         try {
             // Construct a datagram socket and bind it to any available
@@ -87,13 +90,10 @@ public class Elevator implements Runnable{
     //@Override
     public void run() {
         while (!scheduler.shouldExit()) {
-            Command command = ;
-            if(this.command == null){
+            if (command == null) {
                 String request = this.rpcSend(null);
-                String acknowledgement = this.processData(request.getBytes());
-                this.rpcSend(acknowledgement);
-                command = this.getCommand();
             }
+
 
             //Checks whether the elevator should go up or down
             try {
@@ -125,16 +125,7 @@ public class Elevator implements Runnable{
             } catch (InterruptedException e) {
             }
         }
-        this.command = command;
-        System.out.println("Elevator received Command:\n" + command + "\n");
-        //Determine which direction to go by comparing the state and command
-        if (state.getFloorLevel() > command.getFloor()) {
-            state.setDirection(Direction.DOWN);
-        }
-        else{
-            state.setDirection(Direction.UP);
-        }
-        state.setIdleStatus(false);
+        this.updateState(command);
         notifyAll();
     }
 
@@ -166,13 +157,27 @@ public class Elevator implements Runnable{
         // return if the elevator is idle.
         if (state.isIdleStatus())
             return;
-        state.setFloorLevel(command.getFloor());
+
+        if ((state.getFloorLevel() > command.getFloor() && !destinationFloors.isEmpty()) || state.getFloorLevel() > command.getFloor())
+            state.goDown();
+        } else {
+            state.goUp();
+        }
+
+
         System.out.println("Elevator is now on floor: " + state.getFloorLevel() + "\n");
 
         //Check if elevator floor and command floor are equal
-        if (state.getFloorLevel() == command.getFloor()) {
+        if (state.getFloorLevel() == command.getElevatorButton()) {
             System.out.println("Elevator finished Command:\n" + command + "\n");
-            state.setIdleStatus(true); //Set idle status to true since the command is done
+            destinationFloors.remove(command.getElevatorButton());
+            if (destinationFloors.isEmpty() && command == null)
+                state.setIdleStatus(true); //Set idle status to true since the command is done
+        }
+
+        if (state.getFloorLevel() == command.getFloor()) {
+            System.out.println("Elevator Picking Up Passengers with command:\n" + command + "\n");
+            destinationFloors.add(command.getElevatorButton());
         }
         notifyAll();
     }
@@ -242,10 +247,7 @@ public class Elevator implements Runnable{
         String received = new String(data,0,len);
         System.out.println(received + "\n");
 
-        //when the elevator informs the scheduler it is empty
-        if(sendStr == null){
-            this.putCommand(new Command(data));
-        }
+        this.updateState(new Command(data));
 
         // Slow things down (wait 2 seconds)
         try {
@@ -257,10 +259,21 @@ public class Elevator implements Runnable{
         return received;
     }
 
-    //make a function that would check if the elevator is sending nothing or an acknowledgement statement
-
-
-
-
+    /**
+     * Updates the state of the elevator with the new command
+     * @param command
+     */
+    private void updateState(Command command){
+        this.command = command;
+        System.out.println("Elevator received Command:\n" + command + "\n");
+        //Determine which direction to go by comparing the state and command
+        if (state.getFloorLevel() > command.getFloor()) {
+            state.setDirection(Direction.DOWN);
+        }
+        else{
+            state.setDirection(Direction.UP);
+        }
+        state.setIdleStatus(false);
+    }
 
 }

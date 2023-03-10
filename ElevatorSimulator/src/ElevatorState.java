@@ -13,6 +13,7 @@ public class ElevatorState {
     private int floorLevel;
     private boolean idleStatus;
 
+
     /**
      * Constructor for class ElevatorState. The initial state has the following info:
      * elevator direction is up, floor level is 1, and elevator is idle
@@ -69,5 +70,21 @@ public class ElevatorState {
      */
     public void setIdleStatus(boolean idleStatus) {
         this.idleStatus = idleStatus;
+    }
+
+    /**
+     * Goes 1 level up.
+     *
+     */
+    public void goUp() {
+        this.floorLevel++;
+    }
+
+    /**
+     * Goes 1 level down.
+     *
+     */
+    public void goDown() {
+        this.floorLevel--;
     }
 }
