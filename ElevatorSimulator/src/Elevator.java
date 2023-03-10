@@ -90,10 +90,10 @@ public class Elevator implements Runnable{
     //@Override
     public void run() {
         while (!scheduler.shouldExit()) {
+            //Elevator might get stuck waiting in rpcSend, not sure what the group wants to do and how often we want to request
             if (command == null) {
                 String request = this.rpcSend(null);
             }
-
 
             //Checks whether the elevator should go up or down
             try {
@@ -101,7 +101,7 @@ public class Elevator implements Runnable{
             } catch (InterruptedException e) {
             }
 
-            moveFloor(command); //Moves floor based on idle status and direction
+            moveFloor(); //Moves floor based on idle status and direction
         }
     }
 
@@ -153,33 +153,47 @@ public class Elevator implements Runnable{
      * status of the elevator
      * @param command the Command to execute
      */
-    private synchronized void moveFloor(Command command){
+    private synchronized void moveFloor(){
         // return if the elevator is idle.
         if (state.isIdleStatus())
             return;
 
-        if ((state.getFloorLevel() > command.getFloor() && !destinationFloors.isEmpty()) || state.getFloorLevel() > command.getFloor())
-            state.goDown();
+        if (state.getDirection == Direction.UP){
+            state.goUP();
         } else {
-            state.goUp();
+            state.goDOWN();
         }
-
 
         System.out.println("Elevator is now on floor: " + state.getFloorLevel() + "\n");
 
         //Check if elevator floor and command floor are equal
-        if (state.getFloorLevel() == command.getElevatorButton()) {
-            System.out.println("Elevator finished Command:\n" + command + "\n");
-            destinationFloors.remove(command.getElevatorButton());
-            if (destinationFloors.isEmpty() && command == null)
-                state.setIdleStatus(true); //Set idle status to true since the command is done
-        }
-
         if (state.getFloorLevel() == command.getFloor()) {
             System.out.println("Elevator Picking Up Passengers with command:\n" + command + "\n");
             destinationFloors.add(command.getElevatorButton());
+            if (state.getFloorLevel() > command.getElevatorButton()) {
+                state.setDirection(Direction.DOWN);
+            }
+            else{
+                state.setDirection(Direction.UP);
+            }
+            command = null;
         }
-        notifyAll();
+
+        for (int d: destinationFloors) {
+            if (state.getFloorLevel() == d) {
+                System.out.println("Arrived at floor \n" + c + "\n");
+                destinationFloors.remove(d);
+                if (destinationFloors.isEmpty() && command == null) {
+                    state.setIdleStatus(true); //Set idle status to true since the command is done
+                }
+            }
+        }
+
+
+
+
+
+    notifyAll();
     }
 
     /**
