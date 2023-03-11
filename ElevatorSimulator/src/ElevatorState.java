@@ -87,20 +87,4 @@ public class ElevatorState implements Serializable {
     public void setIdleStatus(boolean idleStatus) {
         this.idleStatus = idleStatus;
     }
-
-    /**
-     * Goes 1 level up.
-     *
-     */
-    public void goUp() {
-        this.floorLevel++;
-    }
-
-    /**
-     * Goes 1 level down.
-     *
-     */
-    public void goDown() {
-        this.floorLevel--;
-    }
 }

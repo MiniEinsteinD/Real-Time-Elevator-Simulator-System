@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.util.ArrayList;
 
 /**
@@ -97,5 +98,28 @@ public class SchedulerReceiver implements Runnable {
         }
     }
 
+    public static void main(String args[]) {
+        SchedulerReceiver receiver;
+        SchedulerTransmitter transmitter;
+        DatagramSocket sendReceiveSocket = null;
+
+        try {
+            // Construct a datagram socket and bind it to port 69
+            // on the local host machine. This socket will be used to
+            // receive UDP Datagram packets from elevators and to send
+            // packets back to elevators.
+            sendReceiveSocket = new DatagramSocket(23);
+
+        } catch (SocketException se) {
+            se.printStackTrace();
+            System.exit(1);
+        }
+
+        transmitter = new SchedulerTransmitter();
+        receiver = new SchedulerReceiver(transmitter, sendReceiveSocket);
+
+        Thread transmitterThread = new Thread(transmitter, "transmitter");
+        Thread receiverThread = new Thread(receiver, "receiver");
+    }
 
 }
