@@ -24,13 +24,9 @@ public class SchedulerReceiver implements Runnable {
     /**
      * Constructor for SchedulerReceiver class. Instantiates DatagramSocket and opens port 23
      */
-    public SchedulerReceiver(){
-        transmiter = new SchedulerTransmitter();
-        try {
-            sendReceiveSocket = new DatagramSocket(23);
-        } catch (SocketException e) {
-            throw new RuntimeException(e);
-        }
+    public SchedulerReceiver(SchedulerTransmitter transmiter, DatagramSocket sendReceiveSocket){
+        this.sendReceiveSocket = sendReceiveSocket;
+        this.transmiter = transmiter;
     }
 
 
