@@ -150,9 +150,9 @@ public class Elevator implements Runnable{
 
         //Move depending on destination
         if (state.getDirection == Direction.UP){
-            state.goUP();
+            state.goUp();
         } else {
-            state.goDOWN();
+            state.goDown();
         }
 
         //State the new floor
