@@ -1,3 +1,5 @@
+import java.io.Serializable;
+
 /**
  * The components are all assembled into 1 object that can be broken down to obtain all attributes.
  * Will be used in the elevator class to enqueue a list of commands for the
@@ -6,7 +8,7 @@
  * @author Edited By Mohammed
  * @version 1.0
  */
-public class Command {
+public class Command implements Serializable {
 
     private int time; //Integer representation of the time
     private int floor; //The floor number we wish to travel to
@@ -83,5 +85,26 @@ public class Command {
                 + "\nFloor: " + getFloor() + "\nElevator Button Pressed: " +
                 getElevatorButton() + "\nDirection: " + getDirectionButton() + "\n";
         return string;
+    }
+
+    /**
+     * Compares this Command object with the specified object for equality. Returns true if and only if
+     * the given object is also a Command object and both objects have the same values for time, floor,
+     * elevatorButton, and directionButton.
+     * @param other
+     * @return
+     */
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof Command)) {
+            return false;
+        }
+        Command otherCommand = (Command) other;
+        return this.time == otherCommand.time &&
+                this.floor == otherCommand.floor &&
+                this.directionButton == otherCommand.directionButton &&
+                this.elevatorButton == otherCommand.elevatorButton;
     }
 }

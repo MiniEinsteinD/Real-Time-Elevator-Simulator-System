@@ -27,7 +27,7 @@ public class SchedulerTransmitter implements Runnable {
     public SchedulerTransmitter()
     {
         //Initialize the synchronized arraylist
-        commands = Collections.synchronizedList(new ArrayList<Command>());
+        commands = new ArrayList<Command>();
 
         try {
             // Construct a datagram socket and bind it to port 69
@@ -148,6 +148,8 @@ public class SchedulerTransmitter implements Runnable {
             }
         }
 
+        sendReceiveSocket.close();
+
     }
 
     /**
@@ -155,10 +157,17 @@ public class SchedulerTransmitter implements Runnable {
      * serviced
      * @param commandList arrayList of commands to be serviced
      */
-    public void placeCommandList(ArrayList<Command> commandList) {
-
-        commands.addAll(commandList);
-        System.out.println("Scheduler has added the command list from the floor subsystem\n");
+    public synchronized void placeCommandList(ArrayList<Command> commandList) {
+        while (!commands.isEmpty()) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                System.err.println(e);
+            }
+        }
+        System.out.println("Scheduler has received the command list from the floor subsystem:\n");
+        commands = new ArrayList<>(commandList);
+        notifyAll();
     }
 
     /**
@@ -199,6 +208,43 @@ public class SchedulerTransmitter implements Runnable {
                 commands.remove(i);
             }
         }
+    }
+
+    /**
+     * Method used to obtain the next command for servicing from the ArrayList of commands
+     * @return The next command which will be serviced (index 0)
+     */
+    public synchronized Command getCommands() {
+        while (commands.isEmpty()) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                System.err.println(e);
+            }
+        }
+        Command command = commands.remove(0);
+        System.out.println("Scheduler has passed the following command to the elevator :\n"
+                + command);
+        notifyAll();
+        return command;
+    }
+
+    /**
+     * Method used to obtain the command list for servicing from the ArrayList of commands
+     * @return The command list
+     */
+    public synchronized ArrayList<Command> getCommandList() {
+        while (commands.isEmpty()) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                System.err.println(e);
+            }
+        }
+        ArrayList<Command> commandlist = new ArrayList<>(commands);
+        System.out.println("Scheduler has passed the command list to the elevator :\n");
+        notifyAll();
+        return commandlist;
     }
 
     /**
