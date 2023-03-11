@@ -52,7 +52,7 @@ public class SchedulerTransmitter implements Runnable {
         exitStatus = false;
 
         //Initialize the IDList
-        portList = new ArrayList<>();
+        portList = new ArrayList<Integer>();
     }
 
     /**
@@ -64,10 +64,10 @@ public class SchedulerTransmitter implements Runnable {
     public void run()
     {
         //create the sendData byte array
-        byte sendData[] = new byte[100];
+        byte sendData[] = new byte[1000];
 
         //Create Receive packet from elevator
-        byte receiveData[] = new byte[100];
+        byte receiveData[] = new byte[1000];
         receivePacket = new DatagramPacket(receiveData, receiveData.length);
 
         //create the ElevatorState object to store the received state from the elevators
@@ -166,7 +166,7 @@ public class SchedulerTransmitter implements Runnable {
             }
         }
         System.out.println("Scheduler has received the command list from the floor subsystem:\n");
-        commands = new ArrayList<>(commandList);
+        commands = new ArrayList<Command>(commandList);
         notifyAll();
     }
 
@@ -241,7 +241,7 @@ public class SchedulerTransmitter implements Runnable {
                 System.err.println(e);
             }
         }
-        ArrayList<Command> commandlist = new ArrayList<>(commands);
+        ArrayList<Command> commandlist = new ArrayList<Command>(commands);
         System.out.println("Scheduler has passed the command list to the elevator :\n");
         notifyAll();
         return commandlist;
@@ -268,9 +268,9 @@ public class SchedulerTransmitter implements Runnable {
 
         Command closest = null;
 
-        ArrayList<Command> upCommands = new ArrayList<>();
+        ArrayList<Command> upCommands = new ArrayList<Command>();
 
-        ArrayList<Command> downCommands = new ArrayList<>();
+        ArrayList<Command> downCommands = new ArrayList<Command>();
 
         for (int i = 0; i < commands.size(); i++) {
 
@@ -344,7 +344,11 @@ public class SchedulerTransmitter implements Runnable {
             ByteArrayInputStream in = new ByteArrayInputStream(serializedMessage);
             ObjectInputStream objIn = new ObjectInputStream(in);
             return (Command) objIn.readObject();
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        catch (ClassNotFoundException e) {
             e.printStackTrace();
             return null;
         }
@@ -378,7 +382,10 @@ public class SchedulerTransmitter implements Runnable {
             ByteArrayInputStream in = new ByteArrayInputStream(serializedMessage);
             ObjectInputStream objIn = new ObjectInputStream(in);
             return (ElevatorState) objIn.readObject();
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
+        	e.printStackTrace();
+            return null;
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
             return null;
         }

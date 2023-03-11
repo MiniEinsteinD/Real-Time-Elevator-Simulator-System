@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.util.ArrayList;
 
 /**
@@ -36,10 +37,10 @@ public class SchedulerReceiver implements Runnable {
      * The job of this thread is to listen for commands, deserialize the array of bytes received, and
      * send it to the SchedulerTransmitter
      */
-    @Override
+    //@Override
     public void run() {
 
-        byte data[] = new byte[100];
+        byte data[] = new byte[1000];
 
         byte echoArray[] = new byte[0];
 
@@ -91,11 +92,40 @@ public class SchedulerReceiver implements Runnable {
             ByteArrayInputStream in = new ByteArrayInputStream(serializedMessage);
             ObjectInputStream objIn = new ObjectInputStream(in);
             return (ArrayList<Command>) objIn.readObject();
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
+        	e.printStackTrace();
+            return null;
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
             return null;
         }
     }
 
+    public static void main(String args[]) {
+        SchedulerReceiver receiver;
+        SchedulerTransmitter transmitter;
+        DatagramSocket sendReceiveSocket = null;
+
+        try {
+            // Construct a datagram socket and bind it to port 69
+            // on the local host machine. This socket will be used to
+            // receive UDP Datagram packets from elevators and to send
+            // packets back to elevators.
+            sendReceiveSocket = new DatagramSocket(23);
+
+        } catch (SocketException se) {
+            se.printStackTrace();
+            System.exit(1);
+        }
+
+        transmitter = new SchedulerTransmitter();
+        receiver = new SchedulerReceiver(transmitter, sendReceiveSocket);
+
+        Thread transmitterThread = new Thread(transmitter, "transmitter");
+        Thread receiverThread = new Thread(receiver, "receiver");
+        
+        transmitterThread.start();
+        receiverThread.start();
+    }
 
 }

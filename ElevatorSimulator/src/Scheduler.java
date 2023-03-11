@@ -167,9 +167,9 @@ public class Scheduler implements Runnable {
 
         Command closest = null;
 
-        ArrayList<Command> upCommands = new ArrayList<>();
+        ArrayList<Command> upCommands = new ArrayList<Command>();
 
-        ArrayList<Command> downCommands = new ArrayList<>();
+        ArrayList<Command> downCommands = new ArrayList<Command>();
 
         for (int i = 0; i < commands.size(); i++) {
 
