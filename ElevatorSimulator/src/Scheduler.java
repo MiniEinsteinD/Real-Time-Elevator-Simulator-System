@@ -12,8 +12,8 @@ public class Scheduler implements Runnable {
 
     private List<Command> commands; //The list storing all commands in the system
     private boolean exitStatus;
-
     private Elevator elevator; //the elevator that the scheduler is communicating with
+
 
 
     /**
