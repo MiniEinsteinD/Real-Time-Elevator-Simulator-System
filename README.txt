@@ -6,11 +6,12 @@ The File Iteration1_Group5 Is Packaged In a ZIP Format Containing The Following 
 -README.txt
 -UML Class Diagram
 -UML Sequence Diagram
+-UML State Diagram
 -Test Instructions (.txt format) 
 -Code (Product) Packaged In a Zip Format
 
 ------------------------------------------------------------------------------------------------------------
-Group Responsibilities:
+Group Responsibilities Iteration 1:
 
 Hasan: Command Class, Partial Contribution To Scheduler, README.txt
 Daniah: Floor Class + Sequence Diagram
@@ -21,6 +22,20 @@ Mohammed: Programmed the Scheduler Class
 UML Class Diagram: Full Group Contribution
 
 -------------------------------------------------------------------------------------------------------------
+Group Responsibilities Iteration 2 (Current Iteration):
+
+Hasan: findBestCommand() method, reviewed Scheduler run(), README.txt (getCommand() and putCommand() methods reworked completely by Ali, Daniah)
+Ali: Elevator Class and JUnit tests
+Daniah: Elevator Class and JUnit tests, sequence diagram
+Mohammed: ElevatorState Class, ElevatorStateTest, updated Floor Class
+Ethan: Scheduler run(), JUnit tests, fixed bugs and helped others complete tasks
+
+Pair #1: Ali, Daniah
+Pair #2: Ethan, Hasan 
+Pair #3: Mohammed
+
+ALL contributed towards state machine diagrams, UML diagrams
+--------------------------------------------------------------------------------------------------------------
 Test Setup / Instructions: 
 
 1. Click File on eclipse
@@ -33,10 +48,3 @@ Test Setup / Instructions:
 8. Right click on test under the src folder, click run as, and configure to use JUnit by double clicking on JUnit on the left sidebar.
 9. You can also run tests by navigating to src/test/java, and right clicking the test files and running them using JUnit 4.
 10. The source files can be found in src/main/java and the test files are under src/test/java
-
- 
-
-
-
-
- 

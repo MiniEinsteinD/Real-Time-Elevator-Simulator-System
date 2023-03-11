@@ -2,7 +2,7 @@
  * The Elevator class represents the subsystem of
  * elevators in the simulaton. It only is meant for
  * 1 elevator for iteration 1
- * 
+ *
  * @author Ali El-Khatib
  * @version 1.0
  */
@@ -30,6 +30,7 @@ public class Elevator implements Runnable{
     private ElevatorState state; //state of the elevator
 
     private Command command;
+
 
     private DatagramPacket sendPacket, receivePacket; //Send and recieve packets to communicate with the scheduler
 
@@ -79,13 +80,11 @@ public class Elevator implements Runnable{
             if (command == null && destinationFloors.isEmpty()) {
                 this.rpcSend();
             }
-
             //Checks whether the elevator should go up or down
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
             }
-
             moveFloor(); //Moves floor based on idle status and direction
         }
     }
@@ -268,6 +267,21 @@ public class Elevator implements Runnable{
             }
         }
         state.setIdleStatus(false);
+     }
+     * Gets the command from the elevator
+     * @return the command from the elevator
+     */
+    public synchronized Command getCommand(){
+
+        while (state.isIdleStatus()){
+            try {
+                wait();
+            } catch (InterruptedException e) {
+            }
+        }
+        Command temp = command;
+        command = null;
+        return temp;
     }
 
 
@@ -303,6 +317,23 @@ public class Elevator implements Runnable{
             e.printStackTrace();
             return null;
         }
+     * Moves the elevator up or down based on the direction and idle
+     * status of the elevator
+     * @param command the Command to execute
+     */
+    private synchronized void moveFloor(Command command){
+        // return if the elevator is idle.
+        if (state.isIdleStatus())
+            return;
+        state.setFloorLevel(command.getFloor());
+        System.out.println("Elevator is now on floor: " + state.getFloorLevel() + "\n");
+
+        //Check if elevator floor and command floor are equal
+        if (state.getFloorLevel() == command.getFloor()) {
+            System.out.println("Elevator finished Command:\n" + command + "\n");
+            state.setIdleStatus(true); //Set idle status to true since the command is done
+        }
+        notifyAll();
     }
 
 }

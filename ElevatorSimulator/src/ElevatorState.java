@@ -1,3 +1,5 @@
+import java.io.Serializable;
+
 /**
  * This class represents the state of the elevator system at a given time.
  * The state is used to distinguish between the roles and functions that the elevator
@@ -7,11 +9,11 @@
  * @author Mohammed Abu Alkhair
  *
  */
-public class ElevatorState {
+public class ElevatorState implements Serializable {
 
-    private Direction direction;
-    private int floorLevel;
-    private boolean idleStatus;
+    private Direction direction; //direction the elevator is going toward
+    private int floorLevel; //the floor the elevator is currently at
+    private boolean idleStatus; // whether elevator is servicing a command or not
 
 
     /**
@@ -54,6 +56,20 @@ public class ElevatorState {
      */
     public void setFloorLevel(int floorLevel) {
         this.floorLevel = floorLevel;
+    }
+
+    /**
+     * Go up 1 floor
+     */
+    public void goUp() {
+        this.floorLevel++;
+    }
+
+    /**
+     * Go down 1 floor
+     */
+    public void goDown() {
+        this.floorLevel--;
     }
 
     /**
