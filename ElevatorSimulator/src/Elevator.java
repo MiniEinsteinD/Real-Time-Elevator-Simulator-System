@@ -25,7 +25,7 @@ import java.net.SocketException;
  */
 public class Elevator implements Runnable{
 
-    private Scheduler scheduler; //Represents the shared scheduler between the elevator and the floor
+    private SchedulerTransmitter scheduler; //Represents the shared scheduler between the elevator and the floor
     private int id; //Represents the id of the elevator
 
     private ElevatorState state; //state of the elevator
@@ -37,6 +37,8 @@ public class Elevator implements Runnable{
     private DatagramSocket sendSocket, receiveSocket; //Send and recieve sockets to communicate with the scheduler
 
     private List<Integer> destinationFloors;
+
+    private boolean shouldExit;
 
     /**
      * Constructs and elevator using a scheduler and id
@@ -50,6 +52,7 @@ public class Elevator implements Runnable{
         state = new ElevatorState();
         command = null;
         destinationFloors = new ArrayList<Integer>();
+        shouldExit = false;
 
         try {
             // Construct a datagram socket and bind it to any available
@@ -57,10 +60,9 @@ public class Elevator implements Runnable{
             // send UDP Datagram packets.
             sendSocket = new DatagramSocket();
 
-            // Construct a datagram socket and bind it to port 69
             // on the local host machine. This socket will be used to
             // receive UDP Datagram packets.
-            receiveSocket = new DatagramSocket(69);
+            receiveSocket = new DatagramSocket();
 
         } catch (SocketException se) {
             se.printStackTrace();
@@ -68,18 +70,6 @@ public class Elevator implements Runnable{
         }
     }
 
-    /**
-     * Process data from scheduler
-     * @param data from scheduler
-     *
-     */
-    public String processData(byte[] data) {
-        if (data[0] != 0) {
-            throw new Error("Invalid request.");
-        }
-        //if the scheduler sends a special command, the floor must quit
-
-    }
 
 
     /**
@@ -89,10 +79,10 @@ public class Elevator implements Runnable{
      */
     //@Override
     public void run() {
-        while (!scheduler.shouldExit()) {
-            //Elevator might get stuck waiting in rpcSend, not sure what the group wants to do and how often we want to request
-            if (command == null) {
-                String request = this.rpcSend(null);
+        while (true) {
+            //Send reequest to elevator at the start
+            if (command == null && destinationFloors.isEmpty()) {
+                this.rpcSend();
             }
 
             //Checks whether the elevator should go up or down
@@ -125,7 +115,7 @@ public class Elevator implements Runnable{
             } catch (InterruptedException e) {
             }
         }
-        this.updateState(command);
+        this.addCommand(command);
         notifyAll();
     }
 
@@ -158,12 +148,14 @@ public class Elevator implements Runnable{
         if (state.isIdleStatus())
             return;
 
+        //Move depending on destination
         if (state.getDirection == Direction.UP){
             state.goUP();
         } else {
             state.goDOWN();
         }
 
+        //State the new floor
         System.out.println("Elevator is now on floor: " + state.getFloorLevel() + "\n");
 
         //Check if elevator floor and command floor are equal
@@ -177,50 +169,43 @@ public class Elevator implements Runnable{
                 state.setDirection(Direction.UP);
             }
             command = null;
+            this.rpcSend(); //Get another command
         }
 
+        //check if any passengers need to get off
         for (int d: destinationFloors) {
             if (state.getFloorLevel() == d) {
                 System.out.println("Arrived at floor \n" + c + "\n");
                 destinationFloors.remove(d);
+                //Set idle status to true since the command is done and there are no destinations
                 if (destinationFloors.isEmpty() && command == null) {
-                    state.setIdleStatus(true); //Set idle status to true since the command is done
+                    state.setIdleStatus(true);
                 }
             }
         }
 
+        //Exit if all commands are serviced and the scheduler told us to exit
+        if (shouldExit && destinationFloors.isEmpty() && command == null) {
+            System.exit(0);
+        }
 
-
-
-
-    notifyAll();
     }
 
     /**
      * Send a message to Intermediate, then receive from Intermediate.
-     * @param sendStr The message to send, or null if empty.
      * @return String reply from Intermediate.
      */
-    public String rpcSend(String sendStr) {
+    public String rpcSend() {
 
         //Sent data to scheduler
-        byte[] sendData = {};
-        if (sendStr != null) {
-            sendData = sendStr.getBytes();
-        }
+        byte[] sendData = serializeState(state);
         try {
             sendPacket = new DatagramPacket(sendData, sendData.length,
-                    InetAddress.getLocalHost(), 24);
+                    InetAddress.getLocalHost(), 69);
         } catch (UnknownHostException e1) {
             e1.printStackTrace();
         }
-        System.out.println("Elevator: Sending packet:");
-        System.out.println("To host: " + sendPacket.getAddress());
-        System.out.println("Destination host port: " + sendPacket.getPort());
-        int len = sendPacket.getLength();
-        System.out.println("Length: " + len);
-        System.out.print("Containing: ");
-        System.out.println(new String(sendPacket.getData(),0,len));
+        System.out.println("Elevator: Sending Packet:");
 
         // Send the datagram packet to the scheduler via the send socket.
         try {
@@ -229,7 +214,7 @@ public class Elevator implements Runnable{
             e.printStackTrace();
             System.exit(1);
         }
-        System.out.println("Elevator: packet sent");
+        System.out.println("Elevator: Packet sent");
 
 
         //--------------------------------//
@@ -249,19 +234,17 @@ public class Elevator implements Runnable{
             e.printStackTrace();
             System.exit(1);
         }
+
         // Process the received datagram.
-        System.out.println("Elevator: Packet received:");
-        System.out.println("From host: " + receivePacket.getAddress());
-        System.out.println("Host port: " + receivePacket.getPort());
+        System.out.println("Elevator: Packet Received:");
+
         len = receivePacket.getLength();
-        System.out.println("Length: " + len);
-        System.out.print("Containing:\n");
-        System.out.print(data + "\n");
+        if (len == 0) {
+            shouldExit = true;
+        } else {
+            this.addCommand(deserialize(data));
+        }
 
-        String received = new String(data,0,len);
-        System.out.println(received + "\n");
-
-        this.updateState(new Command(data));
 
         // Slow things down (wait 2 seconds)
         try {
@@ -277,7 +260,7 @@ public class Elevator implements Runnable{
      * Updates the state of the elevator with the new command
      * @param command
      */
-    private void updateState(Command command){
+    private void addCommand(Command command){
         this.command = command;
         System.out.println("Elevator received Command:\n" + command + "\n");
         //Determine which direction to go by comparing the state and command
@@ -288,6 +271,41 @@ public class Elevator implements Runnable{
             state.setDirection(Direction.UP);
         }
         state.setIdleStatus(false);
+    }
+
+
+    /**
+     * Serializes a ElevatorState object into a byte array.
+     * @param state the ElevatorState object to be serialized
+     * @return a byte array representing the serialized ElevatorState object, or null if an error occurs
+     *
+     */
+    public static byte[] serializeState(ElevatorState state) {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ObjectOutputStream objOut = new ObjectOutputStream(out);
+            objOut.writeObject(state);
+            return out.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     Deserializes a byte array into an Command object.
+     @param serializedMessage a byte array representing the serialized Command object
+     @return the deserialized Command object, or null if an error occurs
+     */
+    public static Command deserialize(byte[] serializedMessage) {
+        try {
+            ByteArrayInputStream in = new ByteArrayInputStream(serializedMessage);
+            ObjectInputStream objIn = new ObjectInputStream(in);
+            return (Command) objIn.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 }
