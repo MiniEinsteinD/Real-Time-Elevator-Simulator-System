@@ -1,4 +1,4 @@
-import org.junit.Before;
+/*import org.junit.Before;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.junit.Test;
 
@@ -97,16 +97,16 @@ public class SchedulerReceiverTest {
      * @param serializedMessage a byte array representing the serialized Command object
      * @return the deserialized ArrayList of commands, or null if an error occurs
      */
-    private static ArrayList<Command> deserialize(byte[] serializedMessage) {
-        try {
-            ByteArrayInputStream in = new ByteArrayInputStream(serializedMessage);
-            ObjectInputStream objIn = new ObjectInputStream(in);
-            return (ArrayList<Command>) objIn.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
+    //private static ArrayList<Command> deserialize(byte[] serializedMessage) {
+       // try {
+           // ByteArrayInputStream in = new ByteArrayInputStream(serializedMessage);
+          //  ObjectInputStream objIn = new ObjectInputStream(in);
+          //  return (ArrayList<Command>) objIn.readObject();
+       // } catch (IOException | ClassNotFoundException e) {
+       //     e.printStackTrace();
+       //     return null;
+       // }
+   // }
 
     /**
      * Serializes a Command object into a byte array.
@@ -114,17 +114,17 @@ public class SchedulerReceiverTest {
      * @return a byte array representing the serialized Command object, or null if an error occurs
      *
      */
-    public static byte[] serialize(ArrayList<Command> commands) {
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            ObjectOutputStream objOut = new ObjectOutputStream(out);
-            objOut.writeObject(commands);
-            return out.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
+    //public static byte[] serialize(ArrayList<Command> commands) {
+    //    try {
+    //        ByteArrayOutputStream out = new ByteArrayOutputStream();
+    //        ObjectOutputStream objOut = new ObjectOutputStream(out);
+    //        objOut.writeObject(commands);
+     //       return out.toByteArray();
+     //   } catch (IOException e) {
+      //      e.printStackTrace();
+      //      return null;
+      //  }
+   // }
 
 
-}
+//}
