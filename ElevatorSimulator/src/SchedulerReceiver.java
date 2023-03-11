@@ -3,7 +3,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.SocketException;
 import java.util.ArrayList;
 
 /**
@@ -16,6 +15,8 @@ import java.util.ArrayList;
 public class SchedulerReceiver implements Runnable {
 
     private DatagramPacket receivePacket;
+
+    private DatagramPacket sendPacket;
 
     private DatagramSocket sendReceiveSocket;
 
@@ -40,7 +41,10 @@ public class SchedulerReceiver implements Runnable {
 
         byte data[] = new byte[100];
 
+        byte echoArray[] = new byte[0];
+
         receivePacket = new DatagramPacket(data, data.length); //packet passed byte array and its length (100)
+
 
         boolean exitStatus = false; //should the thread exit
 
@@ -62,7 +66,17 @@ public class SchedulerReceiver implements Runnable {
             } catch (RuntimeException e) {
                 throw new RuntimeException(e);
             }
+
+            sendPacket = new DatagramPacket(echoArray, echoArray.length, receivePacket.getAddress(), receivePacket.getPort());
+
+            try {
+                sendReceiveSocket.send(sendPacket);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
+
+        sendReceiveSocket.close();
     }
 
     /**
