@@ -41,6 +41,8 @@ import java.util.ArrayList;
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
+
+        //creat an array list for the lines to be read from file
         ArrayList<String> listOfLines = new ArrayList<String>();
 
         String line = null;
@@ -49,6 +51,7 @@ import java.util.ArrayList;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
         while (line != null) {
             listOfLines.add(line);
             try {
@@ -57,6 +60,7 @@ import java.util.ArrayList;
                 throw new RuntimeException(e);
             }
         }
+
         try {
             bufReader.close();
         } catch (IOException e) {
@@ -69,6 +73,8 @@ import java.util.ArrayList;
         }
         //send all the commands to the scheduler
         scheduler.placeCommandList(commandList);
+
+        //notify scheduler that there is no more commands to execute
         scheduler.exitThreads();
     }
 

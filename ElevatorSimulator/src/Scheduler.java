@@ -11,9 +11,8 @@ import java.util.List;
 public class Scheduler implements Runnable {
 
     private List<Command> commands; //The list storing all commands in the system
-    private List<Command> servicedCommands; //The list of commands already serviced by the elevators (deprecated)
     private boolean exitStatus;
-    private Elevator elevator;
+    private Elevator elevator; //the elevator that the scheduler is communicating with
 
 
 
@@ -24,13 +23,13 @@ public class Scheduler implements Runnable {
     public Scheduler (){
 
         this.commands = new ArrayList<Command>();
-        this.servicedCommands = new ArrayList<Command>();
         this.exitStatus = false;
     }
 
     /**
      * Method used to add commands to the ArrayList of commands
      * @param command
+     * (deprecated)
      */
     public synchronized void placeCommand(Command command){
         while (!commands.isEmpty()) {
@@ -81,18 +80,19 @@ public class Scheduler implements Runnable {
     public void run() {
     	boolean running = true;
     	while (running) {
+    		// Wait for the Elevator to be idle.
     		while (!elevator.getState().isIdleStatus()) {
-    			// Wait for it to be idle.
     			try {
-					Thread.sleep(50); // Could be a wait so that when the elevator notifies the scheduler we're not doing nothing.
+					Thread.sleep(50);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
     		}
     		
-    		elevator.putCommand(findBestCommand(elevator.getState())); // Add command to the Elevator's list of commands then set idle status and notifyall()
+            // Give the best command to the Elevator based on its state.
+    		elevator.putCommand(findBestCommand(elevator.getState()));
     		
-    		// Might need to adjust the behaviour so that the Elevators can exit.
+    		// All commands have executed; terminate.
     		if (shouldExit()) {
     			running = false;
     		}
@@ -106,42 +106,13 @@ public class Scheduler implements Runnable {
      * deprecated
      */
     public synchronized void placeServicedCommand(Command command){
-        while (!servicedCommands.isEmpty()) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                System.err.println(e);
-            }
-        }
-        System.out.println("Elevator has finished servicing the following command:\n" + command);
-        servicedCommands.add(command);
-        notifyAll();
-    }
-
-    /**
-     * Method used to obtain the commands already serviced by the elevator
-     * @return The next command which will be serviced (index 0)
-     * deprecated
-     */
-    public synchronized Command getServicedCommand() {
-        while (servicedCommands.isEmpty()) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                System.err.println(e);
-            }
-        }
-        Command command = servicedCommands.remove(0);
-        System.out.println("Floor subsystem has been notified that the following command has been serviced:\n"
-                + command);
-        notifyAll();
-        return command;
+        // Do nothing
     }
 
     /**
      * exitThreads signals that it is time to end the threads in this program
      */
-    public void exitThreads()
+    public synchronized void exitThreads()
     {
         exitStatus = true;
     }
@@ -170,15 +141,8 @@ public class Scheduler implements Runnable {
      * @param commandList arrayList of commands to be serviced
      */
     public synchronized void placeCommandList(ArrayList<Command> commandList) {
-        while (!commands.isEmpty()) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                System.err.println(e);
-            }
-        }
-        System.out.println("Scheduler has received the command list from the floor subsystem:\n");
-        commands = new ArrayList<>(commandList);
+        System.out.println("Scheduler has received the command list from the floor subsystem.\n");
+        commands.addAll(commandList);
         notifyAll();
     }
     
