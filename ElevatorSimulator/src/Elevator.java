@@ -25,7 +25,6 @@ import java.net.SocketException;
  */
 public class Elevator implements Runnable{
 
-    private SchedulerTransmitter scheduler; //Represents the shared scheduler between the elevator and the floor
     private int id; //Represents the id of the elevator
 
     private ElevatorState state; //state of the elevator
@@ -46,8 +45,7 @@ public class Elevator implements Runnable{
      * @param scheduler the shared scheduler between the elevator and the floor
      * @param id the id of the elevator
      */
-    public Elevator(Scheduler scheduler, int id) {
-        this.scheduler = scheduler;
+    public Elevator(int id) {
         this.id = id;
         state = new ElevatorState();
         command = null;
@@ -58,11 +56,8 @@ public class Elevator implements Runnable{
             // Construct a datagram socket and bind it to any available
             // port on the local host machine. This socket will be used to
             // send UDP Datagram packets.
-            sendSocket = new DatagramSocket();
+            sendRecieveSocket = new DatagramSocket();
 
-            // on the local host machine. This socket will be used to
-            // receive UDP Datagram packets.
-            receiveSocket = new DatagramSocket();
 
         } catch (SocketException se) {
             se.printStackTrace();
@@ -162,11 +157,12 @@ public class Elevator implements Runnable{
         if (state.getFloorLevel() == command.getFloor()) {
             System.out.println("Elevator Picking Up Passengers with command:\n" + command + "\n");
             destinationFloors.add(command.getElevatorButton());
-            if (state.getFloorLevel() > command.getElevatorButton()) {
-                state.setDirection(Direction.DOWN);
-            }
-            else{
-                state.setDirection(Direction.UP);
+            if (destinationFloors.size() == 1) {
+                if (state.getFloorLevel() > command.getElevatorButton()) {
+                    state.setDirection(Direction.DOWN);
+                } else {
+                    state.setDirection(Direction.UP);
+                }
             }
             command = null;
             this.rpcSend(); //Get another command
@@ -209,7 +205,7 @@ public class Elevator implements Runnable{
 
         // Send the datagram packet to the scheduler via the send socket.
         try {
-            sendSocket.send(sendPacket);
+            sendRecieveSocket.send(sendPacket);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
@@ -227,7 +223,7 @@ public class Elevator implements Runnable{
         // Block until a datagram packet is received from receiveSocket.
         try {
             System.out.println("Waiting..."); // so we know we're waiting
-            receiveSocket.receive(receivePacket);
+            sendRecieveSocket.receive(receivePacket);
         } catch (IOException e) {
             System.out.print("IO Exception: likely:");
             System.out.println("Receive Socket Timed Out.\n" + e);
@@ -264,11 +260,12 @@ public class Elevator implements Runnable{
         this.command = command;
         System.out.println("Elevator received Command:\n" + command + "\n");
         //Determine which direction to go by comparing the state and command
-        if (state.getFloorLevel() > command.getFloor()) {
-            state.setDirection(Direction.DOWN);
-        }
-        else{
-            state.setDirection(Direction.UP);
+        if (destinationFloors.isEmpty()) {
+            if (state.getFloorLevel() > command.getFloor()) {
+                state.setDirection(Direction.DOWN);
+            } else {
+                state.setDirection(Direction.UP);
+            }
         }
         state.setIdleStatus(false);
     }
