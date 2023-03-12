@@ -15,9 +15,11 @@ import java.net.*;
     private DatagramSocket sendReceiveSocket;
     private DatagramPacket sendPacket;
     private DatagramPacket receivePacket;
+    private InetAddress SchedulerAddress;
 
     /**
-     * Constructs a floor using the scheduler and a file
+     * Constructs a floor using a file, a socket. The address of the local
+     * host is the same as the address of the Scheduler
      * @param file File type that stores the commands that needs to be processed
      */
     public Floor(File file, DatagramSocket sendReceiveSocket){
@@ -26,6 +28,29 @@ import java.net.*;
         this.sendReceiveSocket = sendReceiveSocket;
 		sendPacket = null;
 		receivePacket = null;
+
+        //get name of the local host
+        try {
+            SchedulerAddress = InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Constructs a floor using a file, a socket, and the Scheduler address that is
+     * passed as a parameter.
+     * @param file File type that stores the commands that needs to be processed
+     */
+    public Floor(File file, DatagramSocket sendReceiveSocket, InetAddress SchedulerAddress){
+        this.file =  file;
+        commandList = new ArrayList<Command>();
+        this.sendReceiveSocket = sendReceiveSocket;
+        sendPacket = null;
+        receivePacket = null;
+
+        //the name of the scheduler is passes as an argument
+        this.SchedulerAddress = SchedulerAddress;
     }
 
     /**
@@ -84,7 +109,7 @@ import java.net.*;
             byte[] data = bos.toByteArray();
 
             // Send data to SchedulerReciever
-            sendPacket = new DatagramPacket(data, data.length, InetAddress.getLocalHost(), 23);
+            sendPacket = new DatagramPacket(data, data.length, SchedulerAddress, 23);
             System.out.println("Floor: Sending commands to Scheduler subsystem.");
             sendReceiveSocket.send(sendPacket);
 
@@ -107,7 +132,7 @@ import java.net.*;
         try {
             byte[] data = new byte[0];
             // Send data to SchedulerReciever
-            sendPacket = new DatagramPacket(data, data.length, InetAddress.getLocalHost(), 23);
+            sendPacket = new DatagramPacket(data, data.length, SchedulerAddress, 23);
             System.out.println("Floor: Sending commands to Scheduler subsystem.");
             sendReceiveSocket.send(sendPacket);
 
@@ -124,11 +149,28 @@ import java.net.*;
 
     public static void main(String args[]) {
         Floor f;
+
+        InetAddress name;
+        if (args.length == 0) {
+            try {
+                //get the name of the machine
+                name = InetAddress.getLocalHost();
+            } catch (UnknownHostException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        else {
+            try {
+                name = InetAddress.getByName(args[0]);
+            } catch (UnknownHostException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
 		try {
-			f = new Floor(new File("commandFile.txt"), new DatagramSocket());
+			f = new Floor(new File("commandFile.txt"), new DatagramSocket(), name);
 			f.startSubsystem();
 		} catch (SocketException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     }

@@ -36,18 +36,15 @@ public class Simulator{
         }
 
         file = new File("commandFile.txt");
-        elevator = new Elevator( 42);
 
-        floor = new Floor(file);
-        
-        scheduler.setElevator(elevator);
+
+
 
         Thread schedulerThread = new Thread(scheduler, "Scheduler");
-        Thread elevatorThread = new Thread(elevator, "Elevator");
+
 
 
         schedulerThread.start();
-        elevatorThread.start();
-        floor.startSubsystem();
+
     }
 }
