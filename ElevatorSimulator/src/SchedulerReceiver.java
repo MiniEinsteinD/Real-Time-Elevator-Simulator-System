@@ -102,7 +102,7 @@ public class SchedulerReceiver implements Runnable {
     public static void main(String args[]) {
         SchedulerReceiver receiver;
         SchedulerTransmitter transmitter;
-        DatagramSocket sendReceiveSocket = null;
+        DatagramSocket sendReceiveSocket = null, sendReceiveSocketTransmitter = null;
 
         try {
             // Construct a datagram socket and bind it to port 69
@@ -115,6 +115,7 @@ public class SchedulerReceiver implements Runnable {
             se.printStackTrace();
             System.exit(1);
         }
+
 
         transmitter = new SchedulerTransmitter();
         receiver = new SchedulerReceiver(transmitter, sendReceiveSocket);

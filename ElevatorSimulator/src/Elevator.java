@@ -38,6 +38,8 @@ public class Elevator implements Runnable{
 
     private List<Integer> destinationFloors;
 
+    private InetAddress SchedulerAddress;
+
     private boolean shouldExit;
 
     /**
@@ -45,7 +47,7 @@ public class Elevator implements Runnable{
      *
      * @param id the id of the elevator
      */
-    public Elevator(int id) {
+    public Elevator(int id, InetAddress SchedulerAddress) {
         this.id = id;
         state = new ElevatorState();
         command = null;
@@ -63,6 +65,8 @@ public class Elevator implements Runnable{
             se.printStackTrace();
             System.exit(1);
         }
+
+        this.SchedulerAddress = SchedulerAddress;
     }
 
 
@@ -191,12 +195,8 @@ public class Elevator implements Runnable{
 
         //Sent data to scheduler
         byte[] sendData = serializeState(state);
-        try {
-            sendPacket = new DatagramPacket(sendData, sendData.length,
-                    InetAddress.getLocalHost(), 69);
-        } catch (UnknownHostException e1) {
-            e1.printStackTrace();
-        }
+        sendPacket = new DatagramPacket(sendData, sendData.length,
+                SchedulerAddress, 69);
         System.out.println("Elevator: Sending Packet:");
 
         // Send the datagram packet to the scheduler via the send socket.
@@ -306,7 +306,23 @@ public class Elevator implements Runnable{
     }
 
     public static void main(String args[]) {
-        Elevator elevator = new Elevator(24);
+        InetAddress name;
+        if (args.length == 0) {
+            try {
+                //get the name of the machine
+                name = InetAddress.getLocalHost();
+            } catch (UnknownHostException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        else {
+            try {
+                name = InetAddress.getByName(args[0]);
+            } catch (UnknownHostException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        Elevator elevator = new Elevator(24, name);
         Thread elevatorThread = new Thread(elevator, "Elevator");
         elevatorThread.start();
     }

@@ -14,11 +14,13 @@ import static org.junit.Assert.*;
 public class SchedulerTransmitterTest {
 
     private SchedulerTransmitter transmitter;
+    private DatagramSocket sendReceiveSocket = null;
+    private Thread schedulerThread;
 
     @Before
     public void setUp() {
         transmitter = new SchedulerTransmitter();
-        Thread schedulerThread = new Thread(transmitter);
+        schedulerThread = new Thread(transmitter);
         schedulerThread.start();
     }
 
@@ -28,27 +30,14 @@ public class SchedulerTransmitterTest {
     }
 
     @Test
-    public void testPlaceCommand() {
+    public void testSchedulerTransmitter() throws IOException {
+        //create two command
         Command command = new Command(24,1, Direction.UP, 3);
-        transmitter.placeCommand(command);
-        assertEquals(command, transmitter.getCommands());
-    }
+        Command command2 = new Command(24,10, Direction.DOWN, 1);
 
-    @Test
-    public void testPlaceCommandList() {
-        ArrayList<Command> commandList = new ArrayList<>();
-        commandList.add(new Command(24, 1, Direction.UP, 3));
-        commandList.add(new Command(25, 2, Direction.DOWN, 5));
-        transmitter.placeCommandList(commandList);
-        assertEquals(2, (transmitter.getCommandList()).size());
-    }
-
-    /*
-    @Test
-    public void testSocket() throws IOException {
-        //create command and insert it into the transmiter
-        Command command = new Command(24,1, Direction.UP, 3);
+        //insert the two commands onto the transmitter
         transmitter.placeCommand(command);
+        transmitter.placeCommand(command2);
 
         //create socket that simulates the elevator
         DatagramSocket socket = new DatagramSocket(71);
@@ -57,30 +46,26 @@ public class SchedulerTransmitterTest {
 
         // create ElevatorState to send to the SchedulerTransmitter
         ElevatorState elevatorState = new ElevatorState();
-        elevatorState.setIdleStatus(false);
 
         //create the sendPacket
-        byte[] serializedState = SchedulerTransmitter.serializeState(elevatorState);
+        byte[] serializedState = Elevator.serializeState(elevatorState);
         DatagramPacket packet = new DatagramPacket(serializedState, serializedState.length, InetAddress.getLocalHost(), 69);
 
         //create the receive packet
-        byte[] receiveData = new byte[100];
-        packet = new DatagramPacket(receiveData, receiveData.length);
+        byte[] receiveData = new byte[1000];
+        DatagramPacket receivepacket = new DatagramPacket(receiveData, receiveData.length);
 
         //send the packet
         socket.send(packet);
 
         // receive the packet
-        socket.receive(packet);
+        socket.receive(receivepacket);
 
         //get the command
-        Command receivedCommand = SchedulerTransmitter.deserialize(packet.getData());
+        Command receivedCommand = Elevator.deserialize(receivepacket.getData());
 
         assertEquals(command, receivedCommand);
-
-
-
     }
-     */
+
 
 }
