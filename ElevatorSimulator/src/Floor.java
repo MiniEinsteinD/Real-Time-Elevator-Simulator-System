@@ -22,7 +22,7 @@ import java.net.*;
      */
     public Floor(File file){
         this.file =  file;
-        commandList = new ArrayList<>();
+        commandList = new ArrayList<Command>();
         // Networking
         try {
             sendReceiveSocket = new DatagramSocket();

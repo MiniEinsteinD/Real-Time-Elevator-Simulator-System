@@ -74,9 +74,9 @@ public class Elevator implements Runnable{
      */
     //@Override
     public void run() {
-        while (true) {
-            //Send reequest to elevator at the start
-            if (command == null && destinationFloors.isEmpty()) {
+        while (!shouldExit || !destinationFloors.isEmpty() || command != null) {
+            //Send request to elevator at the start
+            if (command == null && !shouldExit) {
                 this.rpcSend();
             }
             //Checks whether the elevator should go up or down
@@ -92,7 +92,7 @@ public class Elevator implements Runnable{
      * Getter method for the state of elevator
      * @return the ElevatorState of the elevator
      */
-    public synchronized ElevatorState getState() {
+    public ElevatorState getState() {
         return state;
     }
 
@@ -101,7 +101,7 @@ public class Elevator implements Runnable{
      * the method sets up direction and sets idle status to false
      * @param command the command that will be put into command
      */
-    public synchronized void putCommand(Command command){
+    public void putCommand(Command command){
         while (!state.isIdleStatus()){
             try {
                 wait();
@@ -117,7 +117,7 @@ public class Elevator implements Runnable{
      * Gets the command from the elevator
      * @return the command from the elevator
      */
-    public synchronized Command getCommand(){
+    public Command getCommand(){
 
         while (state.isIdleStatus()){
             try {
@@ -135,51 +135,50 @@ public class Elevator implements Runnable{
      * Moves the elevator up or down based on the direction and idle
      * status of the elevator
      */
-    private synchronized void moveFloor(){
-        // return if the elevator is idle.
-        if (state.isIdleStatus())
-            return;
-
-        //Move depending on destination
-        if (state.getDirection() == Direction.UP){
-            state.goUp();
-        } else {
-            state.goDown();
+    private void moveFloor(){
+    	//check if any passengers need to get off
+        int i = 0;
+        boolean hasBelow = false;
+        boolean hasAbove = false;
+        while (i < destinationFloors.size()) {
+            if (state.getFloorLevel() == destinationFloors.get(i)) {
+                System.out.println("Arrived at floor \n" + destinationFloors.get(i) + "\n");
+                destinationFloors.remove(i);
+            } else if (state.getFloorLevel() < destinationFloors.get(i)) {
+            	hasAbove = true;
+            	i++;
+            } else {
+            	hasBelow = true;
+            	i++;
+            }
         }
-
-        //State the new floor
-        System.out.println("Elevator is now on floor: " + state.getFloorLevel() + "\n");
-
-        //Check if elevator floor and command floor are equal
-        if (state.getFloorLevel() == command.getFloor()) {
+        // Sidestep tricky problems when finished everything but destinations by checking for null
+        // Check if elevator floor and command floor are equal
+        if (command != null && state.getFloorLevel() == command.getFloor()) {
             System.out.println("Elevator Picking Up Passengers with command:\n" + command + "\n");
             destinationFloors.add(command.getElevatorButton());
-            if (destinationFloors.size() == 1) {
-                if (state.getFloorLevel() > command.getElevatorButton()) {
-                    state.setDirection(Direction.DOWN);
-                } else {
-                    state.setDirection(Direction.UP);
-                }
-            }
             command = null;
-            this.rpcSend(); //Get another command
-        }
-
-        //check if any passengers need to get off
-        for (int d: destinationFloors) {
-            if (state.getFloorLevel() == d) {
-                System.out.println("Arrived at floor \n" + d + "\n");
-                destinationFloors.remove(d);
-                //Set idle status to true since the command is done and there are no destinations
-                if (destinationFloors.isEmpty() && command == null) {
-                    state.setIdleStatus(true);
-                }
-            }
-        }
-
-        //Exit if all commands are serviced and the scheduler told us to exit
-        if (shouldExit && destinationFloors.isEmpty() && command == null) {
-            System.exit(0);
+        } else {
+        	// Change direction if needed.
+        	if (state.getDirection() == Direction.DOWN
+        			&& (hasAbove || ((command != null) && (state.getFloorLevel() < command.getFloor())))
+        			&& !hasBelow) {
+        		state.setDirection(Direction.UP);
+        	} else if (state.getDirection() == Direction.UP
+        			&& (hasBelow || ((command != null) && (state.getFloorLevel() > command.getFloor())))
+        			&& !hasAbove) {
+        		state.setDirection(Direction.DOWN);
+        	}
+        	
+	        //Move depending on destination
+	        if (state.getDirection() == Direction.UP){
+	            state.goUp();
+	        } else {
+	            state.goDown();
+	        }
+	
+	        //State the new floor
+	        System.out.println("Elevator is now on floor: " + state.getFloorLevel() + "\n");
         }
 
     }
@@ -213,7 +212,7 @@ public class Elevator implements Runnable{
         //--------------------------------//
         //Getting command from scheduler//
         //--------------------------------//
-        byte data[] = new byte[100];
+        byte data[] = new byte[1000];
         receivePacket = new DatagramPacket(data, data.length);
         System.out.println("Elevator: Waiting for Packet.\n");
 
@@ -296,7 +295,10 @@ public class Elevator implements Runnable{
             ByteArrayInputStream in = new ByteArrayInputStream(serializedMessage);
             ObjectInputStream objIn = new ObjectInputStream(in);
             return (Command) objIn.readObject();
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
+        	e.printStackTrace();
+            return null;
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
             return null;
         }
