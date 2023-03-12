@@ -133,7 +133,7 @@ public class SchedulerTransmitter implements Runnable {
             }
 
             //remove the port of the elevator from the portList
-            portList.remove(receivePacket.getPort());
+            portList.remove((Integer) receivePacket.getPort());
 
             //create the sendPacket
             sendPacket = new DatagramPacket(exit, exit.length,

@@ -75,8 +75,8 @@ public class Elevator implements Runnable{
     //@Override
     public void run() {
         while (!shouldExit || !destinationFloors.isEmpty() || command != null) {
-            //Send reequest to elevator at the start
-            if (command == null) {
+            //Send request to elevator at the start
+            if (command == null && !shouldExit) {
                 this.rpcSend();
             }
             //Checks whether the elevator should go up or down
@@ -152,20 +152,20 @@ public class Elevator implements Runnable{
             	i++;
             }
         }
-        
-        //Check if elevator floor and command floor are equal
-        if (state.getFloorLevel() == command.getFloor()) {
+        // Sidestep tricky problems when finished everything but destinations by checking for null
+        // Check if elevator floor and command floor are equal
+        if (command != null && state.getFloorLevel() == command.getFloor()) {
             System.out.println("Elevator Picking Up Passengers with command:\n" + command + "\n");
             destinationFloors.add(command.getElevatorButton());
             command = null;
         } else {
         	// Change direction if needed.
         	if (state.getDirection() == Direction.DOWN
-        			&& (hasAbove || state.getFloorLevel() < command.getFloor())
+        			&& (hasAbove || ((command != null) && (state.getFloorLevel() < command.getFloor())))
         			&& !hasBelow) {
         		state.setDirection(Direction.UP);
         	} else if (state.getDirection() == Direction.UP
-        			&& (hasBelow || state.getFloorLevel() > command.getFloor())
+        			&& (hasBelow || ((command != null) && (state.getFloorLevel() > command.getFloor())))
         			&& !hasAbove) {
         		state.setDirection(Direction.DOWN);
         	}

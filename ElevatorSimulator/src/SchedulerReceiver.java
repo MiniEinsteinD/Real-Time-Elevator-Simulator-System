@@ -10,7 +10,7 @@ import java.util.ArrayList;
  * @author Hasan Al-Hasoo
  * @version 1.0
  * The job of this thread is to act as an intermediate host. The thread will receive an array of bytes from the floor
- * class. Then, the byte[] array will be converted into an Arraylist of commands and sent to SchedulerTransmiter class
+ * class. Then, the byte[] array will be converted into an Arraylist of commands and sent to SchedulerTransmitter class
  */
 
 public class SchedulerReceiver implements Runnable {
@@ -21,14 +21,14 @@ public class SchedulerReceiver implements Runnable {
 
     private DatagramSocket sendReceiveSocket;
 
-    private SchedulerTransmitter transmiter;
+    private SchedulerTransmitter transmitter;
 
     /**
      * Constructor for SchedulerReceiver class. Instantiates DatagramSocket and opens port 23
      */
-    public SchedulerReceiver(SchedulerTransmitter transmiter, DatagramSocket sendReceiveSocket){
+    public SchedulerReceiver(SchedulerTransmitter transmitter, DatagramSocket sendReceiveSocket){
         this.sendReceiveSocket = sendReceiveSocket;
-        this.transmiter = transmiter;
+        this.transmitter = transmitter;
     }
 
 
@@ -50,22 +50,18 @@ public class SchedulerReceiver implements Runnable {
         boolean exitStatus = false; //should the thread exit
 
         while (!exitStatus){
-            try{
-                try {
-                    sendReceiveSocket.receive(receivePacket);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-
-                if (receivePacket.getLength() == 0){
-                    exitStatus = true;
-                }
-                else{
-                    ArrayList<Command> commands = deserialize(receivePacket.getData()); //grabs byte[] array and creates an ArrayList of commands
-                    transmiter.placeCommandList(commands); //place the commands from the list onto the transmitter class
-                }
-            } catch (RuntimeException e) {
+            try {
+                sendReceiveSocket.receive(receivePacket);
+            } catch (IOException e) {
                 throw new RuntimeException(e);
+            }
+
+            if (receivePacket.getLength() == 0){
+                exitStatus = true;
+            }
+            else{
+                ArrayList<Command> commands = deserialize(receivePacket.getData()); //grabs byte[] array and creates an ArrayList of commands
+                transmitter.placeCommandList(commands); //place the commands from the list onto the transmitter class
             }
 
             sendPacket = new DatagramPacket(echoArray, echoArray.length, receivePacket.getAddress(), receivePacket.getPort());
@@ -77,6 +73,8 @@ public class SchedulerReceiver implements Runnable {
             }
         }
 
+        transmitter.exitThreads();
+        
         sendReceiveSocket.close();
     }
 
