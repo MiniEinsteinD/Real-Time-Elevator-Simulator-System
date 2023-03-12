@@ -14,6 +14,9 @@ public class ElevatorState implements Serializable {
     private Direction direction; //direction the elevator is going toward
     private int floorLevel; //the floor the elevator is currently at
     private boolean idleStatus; // whether elevator is servicing a command or not
+    
+    private static final int MAX = 9;
+    private static final int MIN = 1;
 
 
     /**
@@ -59,17 +62,21 @@ public class ElevatorState implements Serializable {
     }
 
     /**
-     * Go up 1 floor
+     * Go up 1 floor but don't go over max
      */
     public void goUp() {
-        this.floorLevel++;
+    	if (this.floorLevel < MAX) {
+    		this.floorLevel++;
+    	}
     }
 
     /**
-     * Go down 1 floor
+     * Go down 1 floor but don't go under min
      */
     public void goDown() {
-        this.floorLevel--;
+    	if (this.floorLevel > MIN) {
+    		this.floorLevel--;
+    	}
     }
 
     /**
@@ -86,21 +93,5 @@ public class ElevatorState implements Serializable {
      */
     public void setIdleStatus(boolean idleStatus) {
         this.idleStatus = idleStatus;
-    }
-
-    /**
-     * Goes 1 level up.
-     *
-     */
-    public void goUp() {
-        this.floorLevel++;
-    }
-
-    /**
-     * Goes 1 level down.
-     *
-     */
-    public void goDown() {
-        this.floorLevel--;
     }
 }

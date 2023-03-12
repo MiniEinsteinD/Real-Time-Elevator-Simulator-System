@@ -18,12 +18,11 @@ import java.net.*;
 
     /**
      * Constructs a floor using the scheduler and a file
-     * @param scheduler the shared scheduler between the elevator and the floor
      * @param file File type that stores the commands that needs to be processed
      */
     public Floor(File file){
         this.file =  file;
-        commandList = new ArrayList<>();
+        commandList = new ArrayList<Command>();
         // Networking
         try {
             sendReceiveSocket = new DatagramSocket();
