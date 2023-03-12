@@ -20,18 +20,12 @@ import java.net.*;
      * Constructs a floor using the scheduler and a file
      * @param file File type that stores the commands that needs to be processed
      */
-    public Floor(File file){
+    public Floor(File file, DatagramSocket sendReceiveSocket){
         this.file =  file;
         commandList = new ArrayList<Command>();
-        // Networking
-        try {
-            sendReceiveSocket = new DatagramSocket();
-            sendPacket = null;
-            receivePacket = null;
-        } catch (SocketException se) {
-            sendReceiveSocket.close();
-            throw new RuntimeException(se);
-        }
+        this.sendReceiveSocket = sendReceiveSocket;
+		sendPacket = null;
+		receivePacket = null;
     }
 
     /**
@@ -129,7 +123,13 @@ import java.net.*;
     }
 
     public static void main(String args[]) {
-        Floor f = new Floor(new File ("commandFile.txt"));
-        f.startSubsystem();
+        Floor f;
+		try {
+			f = new Floor(new File("commandFile.txt"), new DatagramSocket());
+			f.startSubsystem();
+		} catch (SocketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 }
