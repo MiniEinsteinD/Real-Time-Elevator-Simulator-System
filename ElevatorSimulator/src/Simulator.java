@@ -37,8 +37,7 @@ public class Simulator{
 
         file = new File("commandFile.txt");
         elevator = new Elevator( 42);
-        transmitter = new SchedulerTransmitter();
-        receiver = new SchedulerReceiver(transmitter, sendReceiveSocket);
+
         floor = new Floor(file);
         
         scheduler.setElevator(elevator);
