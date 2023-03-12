@@ -22,7 +22,7 @@ Mohammed: Programmed the Scheduler Class
 UML Class Diagram: Full Group Contribution
 
 -------------------------------------------------------------------------------------------------------------
-Group Responsibilities Iteration 2 (Current Iteration):
+Group Responsibilities Iteration 2:
 
 Hasan: findBestCommand() method, reviewed Scheduler run(), README.txt (getCommand() and putCommand() methods reworked completely by Ali, Daniah)
 Ali: Elevator Class and JUnit tests
@@ -36,6 +36,20 @@ Pair #3: Mohammed
 
 ALL contributed towards state machine diagrams, UML diagrams
 --------------------------------------------------------------------------------------------------------------
+Group Responsibilities Iteration 3 (Current Iteration):
+
+Hasan: SchedulerReceiver Thread, SchedulerReceiverTest
+Ali: Elevator Thread, ElevatorTest (run() method)
+Daniah: Elevator Thread
+Mohammed: SchedulerTransmitter, SchedulerTransmitterTest
+Ethan: Floor, Helped With Elevator and Elevator Testing, Fix Bugs in All classes, helped with SchedulerReceiver Testing
+
+Pair #1: Hasan, Mohammed
+Pair #2: Ethan
+Pair #3: Ali, Daniah
+
+All contributed towards UML class diagram, Sequence Diagram(Ethan, Daniah, Mohammed), ScheduleTransmitter State Machine(Mohammed), SchedulerReceiver State Mechine (Hasan), Elevator State Machine (Ali).
+---------------------------------------------------------------------------------------------------------------
 Test Setup / Instructions: 
 
 1. Click File on eclipse
