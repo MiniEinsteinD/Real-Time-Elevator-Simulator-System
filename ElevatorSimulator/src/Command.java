@@ -15,6 +15,9 @@ public class Command implements Serializable {
     private int elevatorButton; //The button selected in the elevator car
     private Direction directionButton; //Direction enum (can be up or down)
 
+    private boolean recoverableFault;
+    private boolean permanentFault;
+
     /**
      * Constructor takes in a string AFTER being processed into their individual components.
      * @param time the event has been composed
@@ -30,6 +33,15 @@ public class Command implements Serializable {
         this.elevatorButton = elevatorButton;
     }
 
+    public Command(int time, int floor, Direction directionButton, int elevatorButton, boolean recoverableFault, boolean permanentFault){
+        this.time = time;
+        this.floor = floor;
+        this.directionButton = directionButton;
+        this.elevatorButton = elevatorButton;
+        this.recoverableFault = recoverableFault;
+        this.permanentFault = permanentFault;
+    }
+
     /**
      * Second command constructor that takes an unprocessed string and performs the appropriate operations
      * in order to assemble all fields
@@ -41,6 +53,40 @@ public class Command implements Serializable {
         this.floor = Integer.parseInt(split[1]);
         this.directionButton = Direction.valueOf(split[2].toUpperCase());
         this.elevatorButton = Integer.parseInt(split[3]);
+        this.recoverableFault = false;
+        this.permanentFault = false;
+    }
+
+    /**
+     * Setter method for permanentFault field for the command object's creation.
+     * @param permanentFault boolean
+     */
+    public void setPermanentFault(boolean permanentFault) {
+        this.permanentFault = permanentFault;
+    }
+
+    /**
+     * Setter method for recoverableFault field for the command object's creation.
+     * @param recoverableFault boolean
+     */
+    public void setRecoverableFault(boolean recoverableFault) {
+        this.recoverableFault = recoverableFault;
+    }
+
+    /**
+     * Getter method for recoverableFault field for the command object's creation.
+     * @return recoverableFault field
+     */
+    public boolean isRecoverableFault() {
+        return recoverableFault;
+    }
+
+    /**
+     * Getter method for permanentFault field for the command object's creation.
+     * @return permanentFault field
+     */
+    public boolean isPermanentFault() {
+        return permanentFault;
     }
 
     /**

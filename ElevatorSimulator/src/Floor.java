@@ -58,7 +58,7 @@ import java.net.*;
      * Continuously sends commands and receives responses from the scheduler until
      * there are no more commands
      */
-    public void startSubsystem() {
+    public void startSubsystem() throws InterruptedException {
 
         // read lines from file and store them as strings in an ArrayList
         BufferedReader bufReader = null;
@@ -100,33 +100,55 @@ import java.net.*;
         for(String command: listOfLines){
             commandList.add(new Command(command));
         }
-        //send all the commands to the scheduler
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        try {
-            ObjectOutputStream oos = new ObjectOutputStream(bos);
-            oos.writeObject(commandList);
-            oos.flush();
-            byte[] data = bos.toByteArray();
 
-            // Send data to SchedulerReciever
-            sendPacket = new DatagramPacket(data, data.length, SchedulerAddress, 23);
-            System.out.println("Floor: Sending commands to Scheduler subsystem.");
-            sendReceiveSocket.send(sendPacket);
+        int counter = 0;
 
-            // Recieve confirmation from SchedulerReciever.
-            byte[] response = new byte[100];
-            receivePacket = new DatagramPacket(response, response.length);
-            System.out.println("Floor: Receiving confirmation of completion from the Scheduler subsystem.");
-            sendReceiveSocket.receive(receivePacket);
+        while (!commandList.isEmpty()) {
+            Thread.sleep(commandList.get(0).getTime() - counter);
+            counter = counter + commandList.get(0).getTime();
 
-            // In the future we'll handle commands arriving at different times here.
+            ArrayList<Command> tempList = new ArrayList<>();
+            for (Command c: commandList) {
+                if (c.getTime() <= counter) {
+                    tempList.add(c);
+                }
+            }
+            for (Command c: tempList) {
+                commandList.remove(c);
+            }
 
-        } catch (IOException ioe) {} finally {
-            // Cleanup
+            //send all the commands to the scheduler
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
             try {
-                bos.close();
-            } catch (IOException ioe) {}
+                ObjectOutputStream oos = new ObjectOutputStream(bos);
+                oos.writeObject(tempList);
+                oos.flush();
+                byte[] data = bos.toByteArray();
+
+                for (Command c: tempList) {
+                    System.out.println(c +" \n\n\n");
+                }
+                // Send data to SchedulerReciever
+                sendPacket = new DatagramPacket(data, data.length, SchedulerAddress, 23);
+                System.out.println("Floor: Sending commands to Scheduler subsystem.");
+                sendReceiveSocket.send(sendPacket);
+
+                // Recieve confirmation from SchedulerReciever.
+                byte[] response = new byte[100];
+                receivePacket = new DatagramPacket(response, response.length);
+                System.out.println("Floor: Receiving confirmation of completion from the Scheduler subsystem.");
+                sendReceiveSocket.receive(receivePacket);
+
+                // In the future we'll handle commands arriving at different times here.
+
+            } catch (IOException ioe) {} finally {
+                // Cleanup
+                try {
+                    bos.close();
+                } catch (IOException ioe) {}
+            }
         }
+
 
         // Let the scheduler know we're done
         try {
@@ -170,7 +192,7 @@ import java.net.*;
 		try {
 			f = new Floor(new File("commandFile.txt"), new DatagramSocket(), name);
 			f.startSubsystem();
-		} catch (SocketException e) {
+		} catch (SocketException | InterruptedException e) {
 			e.printStackTrace();
 		}
     }
