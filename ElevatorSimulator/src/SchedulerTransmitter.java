@@ -250,29 +250,44 @@ public class SchedulerTransmitter implements Runnable {
     }
 
     /**
-     * Method that finds the command whose floor level is closest to the state parameter passed in. The directions of
-     * the found command and the state must both match. If so, return the closest command so the elevator can service it.
-     * Otherwise, if no suitable command is found, return null
-     * @param state is the current state of the elevator
-     * @return the command whose closest in floor level and pertains to the same direction as state
-     * @author Hasan Al-Hasoo
-     * @version 1.1
+     * This Method find the best command from the list of command to service.
+     * The algorithm first checks if the elevator is idele or not. If it is idle and
+     * the command list is empty, null is returned. If the elevator is idle and there are commands,
+     * then the closest command is serviced.
+     * If the elevator is not idle, then the closest command on the same direction as the elevator
+     * will be returned.
      */
     private synchronized Command findBestCommand(ElevatorState state) {
+        int elevatorFloor = state.getFloorLevel(); //elevator floor level
+        Direction elevatorDirection = state.getDirection(); //direction elevator is headed towards
+        Command bestCommand = null; //the best command to be returned
+        int minDistance = Integer.MAX_VALUE; //the minimum distance available between the elevator and a command
+
+        //check if the elevator is idle or not
         if (state.isIdleStatus()) { // if elevator is idle
             if (commands.isEmpty()) { // if there are no commands
                 return null; // return null
             } else {
-                return commands.get(0); // return the first command
+                //find the closest command to service
+                for (Command command : commands) {
+                    int commandFloor = command.getFloor(); //the level at which the passenger is at
+                    Direction commandDirection = command.getDirectionButton(); //the direction the passenger want to go toward
+
+                    // calculate the distance between elevator's current floor and command's floor
+                    int distance = Math.abs(elevatorFloor - commandFloor);
+
+                    // check if the distance is less than the minimum distance seen so far
+                    if (distance < minDistance) {
+                        bestCommand = command;
+                        minDistance = distance;
+                    }
+                }
+                removeCommand(bestCommand);
+                return bestCommand;
             }
         }
 
         // if elevator is not idle
-        int elevatorFloor = state.getFloorLevel();
-        Direction elevatorDirection = state.getDirection();
-        Command bestCommand = null;
-        int minDistance = Integer.MAX_VALUE;
-
         for (Command command : commands) {
             int commandFloor = command.getFloor();
             Direction commandDirection = command.getDirectionButton();
