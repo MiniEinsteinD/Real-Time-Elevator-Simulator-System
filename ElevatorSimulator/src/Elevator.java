@@ -140,7 +140,7 @@ public class Elevator implements Runnable{
         boolean hasAbove = false;
         while (i < destinationFloors.size()) {
             if (state.getFloorLevel() == destinationFloors.get(i)) {
-                System.out.println("Arrived at floor \n" + destinationFloors.get(i) + "\n");
+                System.out.println("Elevator " + id + " Arrived at floor \n" + destinationFloors.get(i) + "\n");
                 destinationFloors.remove(i);
             } else if (state.getFloorLevel() < destinationFloors.get(i)) {
                 hasAbove = true;
@@ -153,7 +153,7 @@ public class Elevator implements Runnable{
         // Sidestep tricky problems when finished everything but destinations by checking for null
         // Check if elevator floor and command floor are equal
         if (commands.size() != 0 && state.getFloorLevel() == commands.get(0).getFloor()) {
-            System.out.println("Elevator Picking Up Passengers with command:\n" + commands.get(0) + "\n");
+            System.out.println("Elevator " + id + " Picking Up Passengers with command:\n" + commands.get(0) + "\n");
             destinationFloors.add(commands.get(0).getElevatorButton());
             commands.remove(0);
         } else {
@@ -176,7 +176,7 @@ public class Elevator implements Runnable{
             }
 
             //State the new floor
-            System.out.println("Elevator is now on floor: " + state.getFloorLevel() + "\n");
+            System.out.println("Elevator " + id + " is now on floor: " + state.getFloorLevel() + "\n");
         }
 
     }
@@ -191,7 +191,7 @@ public class Elevator implements Runnable{
         byte[] sendData = serializeState(state);
         sendPacket = new DatagramPacket(sendData, sendData.length,
                 SchedulerAddress, 69);
-        System.out.println("Elevator: Sending Packet:");
+        System.out.println("Elevator " + id + ": Sending Packet:");
 
         // Send the datagram packet to the scheduler via the send socket.
         try {
@@ -200,7 +200,7 @@ public class Elevator implements Runnable{
             e.printStackTrace();
             System.exit(1);
         }
-        System.out.println("Elevator: Packet sent");
+        System.out.println("Elevator " + id + ": Packet sent");
 
 
         //--------------------------------//
@@ -208,7 +208,7 @@ public class Elevator implements Runnable{
         //--------------------------------//
         byte data[] = new byte[1000];
         receivePacket = new DatagramPacket(data, data.length);
-        System.out.println("Elevator: Waiting for Packet.\n");
+        System.out.println("Elevator " + id + ": Waiting for Packet.\n");
 
         // Block until a datagram packet is received from receiveSocket.
         try {
@@ -222,7 +222,7 @@ public class Elevator implements Runnable{
         }
 
         // Process the received datagram.
-        System.out.println("Elevator: Packet Received:");
+        System.out.println("Elevator " + id + ": Packet Received:");
 
         int len = receivePacket.getLength();
         if (len == 0) {
@@ -248,7 +248,7 @@ public class Elevator implements Runnable{
      */
     private void addCommand(Command command){
         this.commands.add(command);
-        System.out.println("Elevator received Command:\n" + command + "\n");
+        System.out.println("Elevator " + id + " received Command:\n" + command + "\n");
         //Determine which direction to go by comparing the state and command
         if (destinationFloors.isEmpty()) {
             if (state.getFloorLevel() > command.getFloor()) {
@@ -316,8 +316,14 @@ public class Elevator implements Runnable{
                 throw new RuntimeException(e);
             }
         }
-        Elevator elevator = new Elevator(24, name);
-        Thread elevatorThread = new Thread(elevator, "Elevator");
-        elevatorThread.start();
+        Elevator elevator1 = new Elevator(1, name);
+        Elevator elevator2 = new Elevator(2, name);
+        Elevator elevator3 = new Elevator(3, name);
+        Thread elevatorThread1 = new Thread(elevator1, "Elevator");
+        Thread elevatorThread2 = new Thread(elevator2, "Elevator");
+        Thread elevatorThread3 = new Thread(elevator3, "Elevator");
+        elevatorThread1.start();
+        elevatorThread2.start();
+        elevatorThread3.start();
     }
 }
