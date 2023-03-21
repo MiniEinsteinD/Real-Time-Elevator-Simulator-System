@@ -24,7 +24,7 @@ public class Marshalling {
      Deserializes a byte array into an object of type Command or ElevatorState.
      @param serializedMessage a byte array representing the serialized object
      @param serializedClass the class of the serialized object
-     @return the deserialized object either a Command or ElevatorState, or null if an error occurs
+     @return the deserialized object of the given type, or null if an error occurs
      */
     public static <T> T deserialize(byte[] serializedMessage, Class<T> serializedClass) {
         try {
