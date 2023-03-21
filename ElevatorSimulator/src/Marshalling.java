@@ -23,21 +23,20 @@ public class Marshalling {
     /**
      Deserializes a byte array into an object of type Command or ElevatorState.
      @param serializedMessage a byte array representing the serialized object
+     @param serializedClass the class of the serialized object
      @return the deserialized object either a Command or ElevatorState, or null if an error occurs
      */
-    public static Object deserialize(byte[] serializedMessage) {
+    public static <T> T deserialize(byte[] serializedMessage, Class<T> serializedClass) {
         try {
             ByteArrayInputStream in = new ByteArrayInputStream(serializedMessage);
             ObjectInputStream objIn = new ObjectInputStream(in);
             Object obj = objIn.readObject();
 
             //check the type of object
-            if (obj instanceof Command) {
-                return (Command) obj;
-            } else if (obj instanceof ElevatorState) {
-                return (ElevatorState) obj;
-            } else {
-                throw new IllegalArgumentException("Unknown object type");
+            try {
+                return serializedClass.cast(obj);
+            } catch (ClassCastException e) {
+                throw new IllegalArgumentException("Incorrect class for serialized object.");
             }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -49,12 +48,12 @@ public class Marshalling {
     {
         Command c = new Command(24, 2, Direction.UP, 4);
         byte[] arr = Marshalling.serialize(c);
-        Command cc = (Command) Marshalling.deserialize(arr);
+        Command cc = Marshalling.deserialize(arr, Command.class);
         System.out.println(cc);
 
         ElevatorState es = new ElevatorState();
         byte[] ar = Marshalling.serialize(es);
-        ElevatorState ess = (ElevatorState) Marshalling.deserialize(ar);
+        ElevatorState ess = Marshalling.deserialize(ar, ElevatorState.class);
         System.out.println(ess.getFloorLevel() + "");
     }
 }
