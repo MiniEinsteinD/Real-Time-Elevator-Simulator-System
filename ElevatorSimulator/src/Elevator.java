@@ -1,12 +1,3 @@
-/**
- * The Elevator class represents the subsystem of
- * elevators in the simulaton. It only is meant for
- * 1 elevator for iteration 1
- *
- * @author Ali El-Khatib
- * @version 1.0
- */
-
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
@@ -22,6 +13,9 @@ import java.util.*;
  *
  * @author Daniah and Ali
  * @version 2.0
+ *
+ * @author Ethan Leir
+ * @version 3.0
  */
 public class Elevator implements Runnable{
 
@@ -140,7 +134,7 @@ public class Elevator implements Runnable{
      * status of the elevator
      */
     private void moveFloor(){
-    	//check if any passengers need to get off
+        //check if any passengers need to get off
         int i = 0;
         boolean hasBelow = false;
         boolean hasAbove = false;
@@ -149,11 +143,11 @@ public class Elevator implements Runnable{
                 System.out.println("Arrived at floor \n" + destinationFloors.get(i) + "\n");
                 destinationFloors.remove(i);
             } else if (state.getFloorLevel() < destinationFloors.get(i)) {
-            	hasAbove = true;
-            	i++;
+                hasAbove = true;
+                i++;
             } else {
-            	hasBelow = true;
-            	i++;
+                hasBelow = true;
+                i++;
             }
         }
         // Sidestep tricky problems when finished everything but destinations by checking for null
@@ -163,26 +157,26 @@ public class Elevator implements Runnable{
             destinationFloors.add(command.getElevatorButton());
             command = null;
         } else {
-        	// Change direction if needed.
-        	if (state.getDirection() == Direction.DOWN
-        			&& (hasAbove || ((command != null) && (state.getFloorLevel() < command.getFloor())))
-        			&& !hasBelow) {
-        		state.setDirection(Direction.UP);
-        	} else if (state.getDirection() == Direction.UP
-        			&& (hasBelow || ((command != null) && (state.getFloorLevel() > command.getFloor())))
-        			&& !hasAbove) {
-        		state.setDirection(Direction.DOWN);
-        	}
-        	
-	        //Move depending on destination
-	        if (state.getDirection() == Direction.UP){
-	            state.goUp();
-	        } else {
-	            state.goDown();
-	        }
-	
-	        //State the new floor
-	        System.out.println("Elevator is now on floor: " + state.getFloorLevel() + "\n");
+            // Change direction if needed.
+            if (state.getDirection() == Direction.DOWN
+                    && (hasAbove || ((command != null) && (state.getFloorLevel() < command.getFloor())))
+                    && !hasBelow) {
+                state.setDirection(Direction.UP);
+            } else if (state.getDirection() == Direction.UP
+                    && (hasBelow || ((command != null) && (state.getFloorLevel() > command.getFloor())))
+                    && !hasAbove) {
+                state.setDirection(Direction.DOWN);
+                    }
+
+            //Move depending on destination
+            if (state.getDirection() == Direction.UP){
+                state.goUp();
+            } else {
+                state.goDown();
+            }
+
+            //State the new floor
+            System.out.println("Elevator is now on floor: " + state.getFloorLevel() + "\n");
         }
 
     }
@@ -264,7 +258,7 @@ public class Elevator implements Runnable{
             }
         }
         state.setIdleStatus(false);
-     }
+    }
 
 
     /**
@@ -286,17 +280,17 @@ public class Elevator implements Runnable{
     }
 
     /**
-     Deserializes a byte array into an Command object.
-     @param serializedMessage a byte array representing the serialized Command object
-     @return the deserialized Command object, or null if an error occurs
-     */
+      Deserializes a byte array into an Command object.
+      @param serializedMessage a byte array representing the serialized Command object
+      @return the deserialized Command object, or null if an error occurs
+      */
     public static Command deserialize(byte[] serializedMessage) {
         try {
             ByteArrayInputStream in = new ByteArrayInputStream(serializedMessage);
             ObjectInputStream objIn = new ObjectInputStream(in);
             return (Command) objIn.readObject();
         } catch (IOException e) {
-        	e.printStackTrace();
+            e.printStackTrace();
             return null;
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
