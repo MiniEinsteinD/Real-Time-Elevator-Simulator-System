@@ -23,7 +23,7 @@ public class Elevator implements Runnable{
 
     private ElevatorState state; //state of the elevator
 
-    private Command command;
+    private ArrayList<Command> commands;
 
 
     private DatagramPacket sendPacket, receivePacket; //Send and recieve packets to communicate with the scheduler
@@ -44,7 +44,7 @@ public class Elevator implements Runnable{
     public Elevator(int id, InetAddress SchedulerAddress) {
         this.id = id;
         state = new ElevatorState();
-        command = null;
+        commands = new ArrayList<Command>();
         destinationFloors = new ArrayList<Integer>();
         shouldExit = false;
 
@@ -72,9 +72,9 @@ public class Elevator implements Runnable{
      */
     //@Override
     public void run() {
-        while (!shouldExit || !destinationFloors.isEmpty() || command != null) {
+        while (!shouldExit || !destinationFloors.isEmpty() || commands.size() != 0) {
             //Send request to elevator at the start
-            if (command == null && !shouldExit) {
+            if (commands.size() == 0 && !shouldExit) {
                 this.rpcSend();
             }
             //Checks whether the elevator should go up or down
@@ -123,8 +123,8 @@ public class Elevator implements Runnable{
             } catch (InterruptedException e) {
             }
         }
-        Command temp = command;
-        command = null;
+        Command temp = commands.get(0);
+        commands.remove(0);
         return temp;
     }
 
@@ -152,18 +152,18 @@ public class Elevator implements Runnable{
         }
         // Sidestep tricky problems when finished everything but destinations by checking for null
         // Check if elevator floor and command floor are equal
-        if (command != null && state.getFloorLevel() == command.getFloor()) {
-            System.out.println("Elevator Picking Up Passengers with command:\n" + command + "\n");
-            destinationFloors.add(command.getElevatorButton());
-            command = null;
+        if (commands.size() != 0 && state.getFloorLevel() == commands.get(0).getFloor()) {
+            System.out.println("Elevator Picking Up Passengers with command:\n" + commands.get(0) + "\n");
+            destinationFloors.add(commands.get(0).getElevatorButton());
+            commands.remove(0);
         } else {
             // Change direction if needed.
             if (state.getDirection() == Direction.DOWN
-                    && (hasAbove || ((command != null) && (state.getFloorLevel() < command.getFloor())))
+                    && (hasAbove || ((commands.size() != 0) && (state.getFloorLevel() < commands.get(0).getFloor())))
                     && !hasBelow) {
                 state.setDirection(Direction.UP);
             } else if (state.getDirection() == Direction.UP
-                    && (hasBelow || ((command != null) && (state.getFloorLevel() > command.getFloor())))
+                    && (hasBelow || ((commands.size() != 0) && (state.getFloorLevel() > commands.get(0).getFloor())))
                     && !hasAbove) {
                 state.setDirection(Direction.DOWN);
                     }
@@ -247,7 +247,7 @@ public class Elevator implements Runnable{
      * @param command
      */
     private void addCommand(Command command){
-        this.command = command;
+        this.commands.add(command);
         System.out.println("Elevator received Command:\n" + command + "\n");
         //Determine which direction to go by comparing the state and command
         if (destinationFloors.isEmpty()) {
