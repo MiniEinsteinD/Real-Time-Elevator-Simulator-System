@@ -102,9 +102,9 @@ public class Elevator implements Runnable{
                 passengersLeaving(); //Deal with destinations that we've reached
                 passengersEntering(); //Deal with commands that we've reached
                 moveFloor(); //Moves floor based on idle status and direction
-                //If we're out of commands, let the scheduler know they can
-                //make us change direction.
-                if (commands.size() == 0) {
+                //If we're out of commands and destinations, let the scheduler
+                //know they can make us change direction.
+                if (commands.size() == 0 && destinationFloors.size() == 0) {
                     idleStatus = true;
                 }
             }
