@@ -168,7 +168,7 @@ public class Elevator implements Runnable{
         boolean shouldContinue = true;
 
         //Sent data to scheduler
-        byte[] sendData = serializeState(state);
+        byte[] sendData = Marshalling.serialize(state);
         sendPacket = new DatagramPacket(sendData, sendData.length,
                 SchedulerAddress, 69);
         System.out.println("Elevator " + id + ": Sending Packet:");
@@ -208,11 +208,11 @@ public class Elevator implements Runnable{
         if (len == 0) {
             shouldExit = true;
         } else {
-            Command command = deserialize(data);
+            Command command = Marshalling.deserialize(data, Command.class);
             if (command == null) {
                 shouldContinue = false;
             } else {
-                this.addCommand(deserialize(data));
+                this.addCommand(command);
             }
         }
 
@@ -243,48 +243,6 @@ public class Elevator implements Runnable{
             state.setDirection(Direction.UP);
         }
         state.setIdleStatus(false);
-    }
-
-
-    /**
-     * Serializes a ElevatorState object into a byte array.
-     * @param state the ElevatorState object to be serialized
-     * @return a byte array representing the serialized ElevatorState object, or
-     * null if an error occurs
-     */
-    public static byte[] serializeState(ElevatorState state) {
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            ObjectOutputStream objOut = new ObjectOutputStream(out);
-            objOut.writeObject(state);
-            return out.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-
-    /**
-      Deserializes a byte array into an Command object.
-      @param serializedMessage a byte array representing the serialized Command
-      object
-      @return the deserialized Command object, or null if an error occurs
-      */
-    public static Command deserialize(byte[] serializedMessage) {
-        try {
-            ByteArrayInputStream in =
-                new ByteArrayInputStream(serializedMessage);
-            ObjectInputStream objIn = new ObjectInputStream(in);
-            return (Command) objIn.readObject();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
-
     }
 
 
