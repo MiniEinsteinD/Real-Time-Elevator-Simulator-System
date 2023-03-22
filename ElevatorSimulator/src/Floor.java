@@ -1,6 +1,7 @@
 import java.io.*;
 import java.util.ArrayList;
 import java.net.*;
+import java.util.Comparator;
 
 /**
  * The Floor class represents the floor subsystem
@@ -100,6 +101,20 @@ import java.net.*;
         for(String command: listOfLines){
             commandList.add(new Command(command));
         }
+        commandList.sort(new Comparator<Command>() {
+            /**
+             * Sorts starting from Earliest time
+             * @param o1 the first object to be compared.
+             * @param o2 the second object to be compared.
+             * @return
+             */
+            @Override
+            public int compare(Command o1, Command o2) {
+                Integer i1 = o1.getTime();
+                Integer i2 = o2.getTime();
+                return i1.compareTo(i2);
+            }
+        });
 
         int counter = 0;
 
