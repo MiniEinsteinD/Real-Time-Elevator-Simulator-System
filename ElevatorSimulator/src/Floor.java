@@ -5,7 +5,7 @@ import java.util.Comparator;
 
 /**
  * The Floor class represents the floor subsystem
- * 
+ *
  * @author Daniah Mohammed
  * @version 01
  */
@@ -119,15 +119,18 @@ import java.util.Comparator;
         int counter = 0;
 
         while (!commandList.isEmpty()) {
+            // Wait until the time specified by the next command
             Thread.sleep(commandList.get(0).getTime() - counter);
             counter = commandList.get(0).getTime();
 
+            // Add all commands with the current time to the list to send
             ArrayList<Command> tempList = new ArrayList<>();
             for (Command c: commandList) {
                 if (c.getTime() <= counter) {
                     tempList.add(c);
                 }
             }
+            // Remove all commands to be sent from teh original list
             for (Command c: tempList) {
                 commandList.remove(c);
             }
@@ -153,8 +156,6 @@ import java.util.Comparator;
                 receivePacket = new DatagramPacket(response, response.length);
                 System.out.println("Floor: Receiving confirmation of completion from the Scheduler subsystem.");
                 sendReceiveSocket.receive(receivePacket);
-
-                // In the future we'll handle commands arriving at different times here.
 
             } catch (IOException ioe) {} finally {
                 // Cleanup
