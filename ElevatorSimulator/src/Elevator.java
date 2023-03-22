@@ -37,6 +37,7 @@ public class Elevator implements Runnable{
 
     private boolean shouldExit;
 
+
     /**
      * Constructs and elevator using a scheduler and id
      *
@@ -65,7 +66,6 @@ public class Elevator implements Runnable{
     }
 
 
-
     /**
      * Continuously gets commands from the scheduler until
      * there are no more commands and the floor is done
@@ -73,20 +73,63 @@ public class Elevator implements Runnable{
      */
     //@Override
     public void run() {
-        while (!shouldExit || !destinationFloors.isEmpty()
-                || commands.size() != 0) {
+        boolean shouldContinue;
+        while (!(shouldExit && destinationFloors.isEmpty()
+                    && commands.size() == 0)) {
+            shouldContinue = false;
             //Send request to elevator at the start
-            if (commands.size() == 0 && !shouldExit) {
-                this.rpcSend();
+            if (!shouldExit) {
+                shouldContinue = this.retrieveCommand();
             }
             //Checks whether the elevator should go up or down
+            //Forces Elevators to take an equal number of commands
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
             }
-            moveFloor(); //Moves floor based on idle status and direction
+            //Keep sending until we're told to we can continue to moving
+            if (!shouldContinue) {
+                passengersLeaving();
+                passengersEntering();
+                moveFloor(); //Moves floor based on idle status and direction
+            }
         }
     }
+
+
+    /**
+     * Lets passengers off of the elevator.
+     * Removes destinations at the current floor from the internal list.
+     */
+    private void passengersLeaving() {
+        //check if any passengers need to get off
+        int i = 0;
+        while (i < destinationFloors.size()) {
+            if (state.getFloorLevel() == destinationFloors.get(i)) {
+                System.out.println("Elevator " + id + " Arrived at floor \n"
+                        + destinationFloors.get(i) + "\n");
+                destinationFloors.remove(i);
+            } else {
+                i++;
+            }
+        }
+    }
+
+
+    private void passengersEntering() {
+        // Check if elevator floor and a command floor are equal.
+        int i = 0;
+        while (i < commands.size()) {
+            if (state.getFloorLevel() == commands.get(i).getFloor()) {
+                System.out.println("Elevator " + id
+                        + " Picking Up passenger with command:\n"
+                        + commands.get(i) + "\n");
+                destinationFloors.add(commands.get(i).getElevatorButton());
+                commands.remove(i);
+            }
+        }
+    }
+
 
     /**
      * Getter method for the state of elevator
@@ -96,108 +139,33 @@ public class Elevator implements Runnable{
         return state;
     }
 
-    /**
-     * Puts the command into the command field. Also,
-     * the method sets up direction and sets idle status to false
-     * @param command the command that will be put into command
-     */
-    public void putCommand(Command command){
-        while (!state.isIdleStatus()){
-            try {
-                wait();
-            } catch (InterruptedException e) {
-            }
-        }
-        this.addCommand(command);
-        notifyAll();
-    }
-
-
-    /**
-     * Gets the command from the elevator
-     * @return the command from the elevator
-     */
-    public Command getCommand(){
-
-        while (state.isIdleStatus()){
-            try {
-                wait();
-            } catch (InterruptedException e) {
-            }
-        }
-        Command temp = commands.get(0);
-        commands.remove(0);
-        return temp;
-    }
-
 
     /**
      * Moves the elevator up or down based on the direction and idle
      * status of the elevator
      */
     private void moveFloor(){
-        //check if any passengers need to get off
-        int i = 0;
-        boolean hasBelow = false;
-        boolean hasAbove = false;
-        while (i < destinationFloors.size()) {
-            if (state.getFloorLevel() == destinationFloors.get(i)) {
-                System.out.println("Elevator " + id + " Arrived at floor \n"
-                        + destinationFloors.get(i) + "\n");
-                destinationFloors.remove(i);
-            } else if (state.getFloorLevel() < destinationFloors.get(i)) {
-                hasAbove = true;
-                i++;
-            } else {
-                hasBelow = true;
-                i++;
-            }
-        }
-        // Sidestep tricky problems when finished everything but destinations by
-        // checking for null.
-        // Check if elevator floor and command floor are equal.
-        if (commands.size() != 0
-                && state.getFloorLevel() == commands.get(0).getFloor()) {
-            System.out.println("Elevator " + id
-                    + " Picking Up Passengers with command:\n"
-                    + commands.get(0) + "\n");
-            destinationFloors.add(commands.get(0).getElevatorButton());
-            commands.remove(0);
+        //Move depending on destination
+        if (state.getDirection() == Direction.UP){
+            state.goUp();
         } else {
-            // Change direction if needed.
-            if (state.getDirection() == Direction.DOWN
-                    && (hasAbove || ((commands.size() != 0)
-                            && (state.getFloorLevel()
-                                < commands.get(0).getFloor())))
-                    && !hasBelow) {
-                state.setDirection(Direction.UP);
-            } else if (state.getDirection() == Direction.UP
-                    && (hasBelow || ((commands.size() != 0)
-                            && (state.getFloorLevel()
-                                > commands.get(0).getFloor())))
-                    && !hasAbove) {
-                state.setDirection(Direction.DOWN);
-                    }
-
-            //Move depending on destination
-            if (state.getDirection() == Direction.UP){
-                state.goUp();
-            } else {
-                state.goDown();
-            }
-
-            //State the new floor
-            System.out.println("Elevator " + id + " is now on floor: "
-                    + state.getFloorLevel() + "\n");
+            state.goDown();
         }
+
+        //State the new floor
+        System.out.println("Elevator " + id + " is now on floor: "
+                + state.getFloorLevel() + "\n");
 
     }
 
     /**
-     * Send a message to Intermediate, then receive from Intermediate.
-     * @return String reply from Intermediate.
+     * Send a message to the scheduler, then receive a command from the
+     * scheduler.
+     * @return boolean continue getting commands from the scheduler.
      */
-    public void rpcSend() {
+    public boolean retrieveCommand() {
+
+        boolean shouldContinue = true;
 
         //Sent data to scheduler
         byte[] sendData = serializeState(state);
@@ -240,7 +208,12 @@ public class Elevator implements Runnable{
         if (len == 0) {
             shouldExit = true;
         } else {
-            this.addCommand(deserialize(data));
+            Command command = deserialize(data);
+            if (command == null) {
+                shouldContinue = false;
+            } else {
+                this.addCommand(deserialize(data));
+            }
         }
 
 
@@ -251,8 +224,9 @@ public class Elevator implements Runnable{
             e.printStackTrace();
             System.exit(1);
         }
-        return;
+        return shouldContinue;
     }
+
 
     /**
      * Updates the state of the elevator with the new command
@@ -263,12 +237,10 @@ public class Elevator implements Runnable{
         System.out.println("Elevator " + id + " received Command:\n" + command
                 + "\n");
         //Determine which direction to go by comparing the state and command
-        if (destinationFloors.isEmpty()) {
-            if (state.getFloorLevel() > command.getFloor()) {
-                state.setDirection(Direction.DOWN);
-            } else {
-                state.setDirection(Direction.UP);
-            }
+        if (state.getFloorLevel() > command.getFloor()) {
+            state.setDirection(Direction.DOWN);
+        } else {
+            state.setDirection(Direction.UP);
         }
         state.setIdleStatus(false);
     }
@@ -292,6 +264,7 @@ public class Elevator implements Runnable{
         }
     }
 
+
     /**
       Deserializes a byte array into an Command object.
       @param serializedMessage a byte array representing the serialized Command
@@ -313,6 +286,7 @@ public class Elevator implements Runnable{
         }
 
     }
+
 
     public static void main(String args[]) {
         InetAddress name;
