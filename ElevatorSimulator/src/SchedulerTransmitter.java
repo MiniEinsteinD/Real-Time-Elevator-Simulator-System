@@ -1,8 +1,6 @@
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * This scheduler class communicates with the elevator class to distribute the placed commands to
@@ -13,7 +11,7 @@ import java.util.List;
  */
 public class SchedulerTransmitter implements Runnable {
 
-    private List<Command> commands;
+    private static List<Command> commands;
     private boolean exitStatus;
     private DatagramSocket sendReceiveSocket;
     private DatagramPacket sendPacket, receivePacket;
@@ -104,7 +102,7 @@ public class SchedulerTransmitter implements Runnable {
             command = findBestCommand(state);
 
             //create send packet
-            sendData = serialize(command);
+            sendData = createCommandByteArray(command);
             sendPacket = new DatagramPacket(sendData, sendData.length,
                     receivePacket.getAddress(), receivePacket.getPort());
 
@@ -118,7 +116,8 @@ public class SchedulerTransmitter implements Runnable {
         }
 
         //Exit message to send to elevators
-        byte exit[] = new byte[0];
+        byte exit[] = new byte[1];
+        exit[0] = 0;
 
         //notify all elevators that it is time to exit
         while(!portList.isEmpty()) {
@@ -202,7 +201,10 @@ public class SchedulerTransmitter implements Runnable {
      * @param command target command
      * @author Ethan Leir
      */
-    private void removeCommand(Command command){
+    private synchronized void removeCommand(Command command){
+        if(command == null) {
+            return;
+        }
         for (int i = 0; i < commands.size(); i++){
             if(commands.get(i) == command){
                 commands.remove(i);
@@ -248,72 +250,67 @@ public class SchedulerTransmitter implements Runnable {
     }
 
     /**
-     * Method that finds the command whose floor level is closest to the state parameter passed in. The directions of
-     * the found command and the state must both match. If so, return the closest command so the elevator can service it.
-     * Otherwise, if no suitable command is found, return null
-     * @param state is the current state of the elevator
-     * @return the command whose closest in floor level and pertains to the same direction as state
-     * @author Hasan Al-Hasoo
-     * @version 1.1
+     * This Method find the best command from the list of command to service.
+     * The algorithm first checks if the elevator is idele or not. If it is idle and
+     * the command list is empty, null is returned. If the elevator is idle and there are commands,
+     * then the closest command is serviced.
+     * If the elevator is not idle, then the closest command on the same direction as the elevator
+     * will be returned.
      */
     private synchronized Command findBestCommand(ElevatorState state) {
+        int elevatorFloor = state.getFloorLevel(); //elevator floor level
+        Direction elevatorDirection = state.getDirection(); //direction elevator is headed towards
+        Command bestCommand = null; //the best command to be returned
+        int minDistance = Integer.MAX_VALUE; //the minimum distance available between the elevator and a command
 
-        while (commands.isEmpty()) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        //check if the elevator is idle or not
+        if (state.isIdleStatus()) { // if elevator is idle
+            if (commands.isEmpty()) { // if there are no commands
+                return null; // return null
+            } else {
+                //find the closest command to service
+                for (Command command : commands) {
+                    int commandFloor = command.getFloor(); //the level at which the passenger is at
+                    Direction commandDirection = command.getDirectionButton(); //the direction the passenger want to go toward
+
+                    // calculate the distance between elevator's current floor and command's floor
+                    int distance = Math.abs(elevatorFloor - commandFloor);
+
+                    // check if the distance is less than the minimum distance seen so far
+                    if (distance < minDistance) {
+                        bestCommand = command;
+                        minDistance = distance;
+                    }
+                }
+                removeCommand(bestCommand);
+                return bestCommand;
             }
         }
 
-        Command closest = null;
+        // if elevator is not idle
+        for (Command command : commands) {
+            int commandFloor = command.getFloor();
+            Direction commandDirection = command.getDirectionButton();
 
-        ArrayList<Command> upCommands = new ArrayList<Command>();
+            // check if command is on the same path as the elevator's current direction
+            boolean samePath = elevatorDirection == Direction.UP ? commandFloor >= elevatorFloor : commandFloor <= elevatorFloor;
 
-        ArrayList<Command> downCommands = new ArrayList<Command>();
+            if (samePath) {
+                // calculate the distance between elevator's current floor and command's floor
+                int distance = Math.abs(elevatorFloor - commandFloor);
 
-        for (int i = 0; i < commands.size(); i++) {
-
-            if (commands.get(i).getDirectionButton() == Direction.UP) {
-                upCommands.add(commands.get(i));
-            }
-            if (commands.get(i).getDirectionButton() == Direction.DOWN) {
-                downCommands.add(commands.get(i));
-            }
-        }
-
-        if (upCommands.isEmpty()) {
-            state.setDirection(Direction.DOWN);
-        }
-
-        if (downCommands.isEmpty()) {
-            state.setDirection(Direction.UP);
-        }
-
-        if (state.getDirection() == Direction.UP) {
-            closest = upCommands.get(0);
-            for (Command upCommand : upCommands) {
-                if (Math.abs(upCommand.getFloor() - state.getFloorLevel()) < Math.abs(closest.getFloor() - state.getFloorLevel())) {
-                    closest = upCommand;
+                // check if the distance is less than the minimum distance seen so far
+                if (distance < minDistance) {
+                    // if elevator is already headed in the same direction as the command, choose it
+                    if (elevatorDirection == commandDirection) {
+                        bestCommand = command;
+                        minDistance = distance;
+                    }
                 }
             }
-            removeCommand(closest);
-            return closest;
         }
-
-
-        if (state.getDirection() == Direction.DOWN) {
-            closest = downCommands.get(0);
-            for (Command downCommand : downCommands) {
-                if (Math.abs(downCommand.getFloor() - state.getFloorLevel()) < Math.abs(closest.getFloor() - state.getFloorLevel())) {
-                    closest = downCommand;
-                }
-            }
-            removeCommand(closest);
-            return closest;
-        }
-
-        return null;
+        removeCommand(bestCommand);
+        return bestCommand;
     }
 
     /**
@@ -390,4 +387,32 @@ public class SchedulerTransmitter implements Runnable {
             return null;
         }
     }
+
+    /**
+     * Serializes a Command object and inserts the resulting bytes into a new byte array with the first byte as a 2.
+     * The resulting byte array will have a length of commandBytes length + 1, with the byte 2 at index 0 and
+     * the serialized command bytes starting at index 1.
+     *
+     * @param command the object to serialize
+     * @return a new byte array containing the serialized Command object with a first byte a '2'
+     */
+    public static byte[] createCommandByteArray(Command command) {
+
+        byte[] commandBytes = serialize(command);
+        byte[] result = new byte[commandBytes.length + 1];
+        if(command == null) {
+            result[0] = 1;
+        }
+        else {
+            result[0] = 2;
+        }
+        System.arraycopy(commandBytes, 0, result, 1, commandBytes.length);
+        return result;
+    }
+
+    public static void main(String args[])
+    {
+    }
+
+
 }
