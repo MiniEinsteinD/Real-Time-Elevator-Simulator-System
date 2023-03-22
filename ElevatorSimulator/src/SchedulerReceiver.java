@@ -58,9 +58,8 @@ public class SchedulerReceiver implements Runnable {
 
             if (receivePacket.getLength() == 0){
                 exitStatus = true;
-            }
-            else{
-                ArrayList<Command> commands = deserialize(receivePacket.getData()); //grabs byte[] array and creates an ArrayList of commands
+            } else {
+                ArrayList<Object> commandObjs = Marshalling.deserialize(receivePacket.getData(), ArrayList.class); //grabs byte[] array and creates an ArrayList of command objects
                 transmitter.placeCommandList(commands); //place the commands from the list onto the transmitter class
             }
 
@@ -74,35 +73,15 @@ public class SchedulerReceiver implements Runnable {
         }
 
         transmitter.exitThreads();
-        
+
         sendReceiveSocket.close();
     }
 
-    /**
-     * @author Mohammed Abu Alkhair
-     * EDITED BY: HASAN Al-HASOO
-     * Deserializes a byte array into an ArrayList of command objects.
-     * @param serializedMessage a byte array representing the serialized Command object
-     * @return the deserialized ArrayList of commands, or null if an error occurs
-     */
-    public static ArrayList<Command> deserialize(byte[] serializedMessage) {
-        try {
-            ByteArrayInputStream in = new ByteArrayInputStream(serializedMessage);
-            ObjectInputStream objIn = new ObjectInputStream(in);
-            return (ArrayList<Command>) objIn.readObject();
-        } catch (IOException e) {
-        	e.printStackTrace();
-            return null;
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
 
     public static void main(String args[]) {
         SchedulerReceiver receiver;
         SchedulerTransmitter transmitter;
-        DatagramSocket sendReceiveSocket = null, sendReceiveSocketTransmitter = null;
+        DatagramSocket sendReceiveSocket = null;
 
         try {
             // Construct a datagram socket and bind it to port 69
@@ -122,7 +101,7 @@ public class SchedulerReceiver implements Runnable {
 
         Thread transmitterThread = new Thread(transmitter, "transmitter");
         Thread receiverThread = new Thread(receiver, "receiver");
-        
+
         transmitterThread.start();
         receiverThread.start();
     }
