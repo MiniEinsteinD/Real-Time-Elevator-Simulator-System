@@ -1,6 +1,4 @@
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
@@ -59,8 +57,16 @@ public class SchedulerReceiver implements Runnable {
             if (receivePacket.getLength() == 0){
                 exitStatus = true;
             } else {
-                ArrayList<Object> commandObjs = Marshalling.deserialize(receivePacket.getData(), ArrayList.class); //grabs byte[] array and creates an ArrayList of command objects
-                transmitter.placeCommandList(commands); //place the commands from the list onto the transmitter class
+                //grabs byte[] array and creates an ArrayList of command objects
+                for (Object obj : Marshalling.deserialize(receivePacket.getData(), ArrayList.class)) {
+                    if (obj instanceof Command) {
+                        //place the commands from the list onto the transmitter class
+                        transmitter.placeCommand((Command) obj);
+                    } else {
+                        throw new RuntimeException("Unexpected object type "
+                               + "obtained from Floor subsystem.");
+                    }
+                }
             }
 
             sendPacket = new DatagramPacket(echoArray, echoArray.length, receivePacket.getAddress(), receivePacket.getPort());
