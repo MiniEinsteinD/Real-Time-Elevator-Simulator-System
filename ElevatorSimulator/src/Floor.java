@@ -120,7 +120,7 @@ import java.util.Comparator;
 
         while (!commandList.isEmpty()) {
             Thread.sleep(commandList.get(0).getTime() - counter);
-            counter = counter + commandList.get(0).getTime();
+            counter = commandList.get(0).getTime();
 
             ArrayList<Command> tempList = new ArrayList<>();
             for (Command c: commandList) {
