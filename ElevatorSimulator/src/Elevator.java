@@ -5,8 +5,7 @@ import java.util.*;
 
 /**
  * The Elevator class represents the subsystem of
- * elevators in the simulaton. It only is meant for
- * 1 elevator for iteration 1
+ * elevators in the simulaton.
  *
  * @author Ali El-Khatib
  * @version 1.0
@@ -21,21 +20,28 @@ public class Elevator implements Runnable{
 
     private int id; //Represents the id of the elevator
 
-    private ElevatorState state; //state of the elevator
-
     private ArrayList<Command> commands;
 
-    //Send and recieve packets to communicate with the scheduler
-    private DatagramPacket sendPacket, receivePacket;
+    private DatagramPacket sendPacket, receivePacket; //Send and recieve packets
+                                                      //to communicate with the
+                                                      //scheduler
 
-    //SendRecieve sockets to communicate with the scheduler
-    private DatagramSocket sendRecieveSocket;
+    private DatagramSocket sendRecieveSocket; //SendRecieve sockets to
+                                              //communicate with the scheduler
 
     private List<Integer> destinationFloors;
 
     private InetAddress SchedulerAddress;
 
     private boolean shouldExit;
+
+    private Direction direction; //direction the elevator is going toward
+    private int floorLevel; //the floor the elevator is currently at
+    private boolean idleStatus; // whether elevator is servicing a command or
+                                // not
+
+    private static final int MAX_FLOOR_LEVEL = 9;
+    private static final int MIN_FLOOR_LEVEL = 1;
 
 
     /**
@@ -45,10 +51,13 @@ public class Elevator implements Runnable{
      */
     public Elevator(int id, InetAddress SchedulerAddress) {
         this.id = id;
-        state = new ElevatorState();
         commands = new ArrayList<Command>();
         destinationFloors = new ArrayList<Integer>();
+
         shouldExit = false;
+        direction = Direction.UP;
+        floorLevel = 1;
+        idleStatus = true;
 
         try {
             // Construct a datagram socket and bind it to any available
@@ -77,21 +86,27 @@ public class Elevator implements Runnable{
         while (!(shouldExit && destinationFloors.isEmpty()
                     && commands.size() == 0)) {
             shouldContinue = false;
-            //Send request to elevator at the start
+            //Send request to elevator at the start.
             if (!shouldExit) {
-                shouldContinue = this.retrieveCommand();
+                shouldContinue = this.retrieveCommandFromScheduler();
             }
-            //Checks whether the elevator should go up or down
+            //Checks whether the elevator should go up or down.
             //Forces Elevators to take an equal number of commands
+            //because they can't hog send requests to the scheduler.
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
             }
             //Keep sending until we're told to we can continue to moving
             if (!shouldContinue) {
-                passengersLeaving();
-                passengersEntering();
+                passengersLeaving(); //Deal with destinations that we've reached
+                passengersEntering(); //Deal with commands that we've reached
                 moveFloor(); //Moves floor based on idle status and direction
+                //If we're out of commands, let the scheduler know they can
+                //make us change direction.
+                if (commands.size() == 0) {
+                    idleStatus = true;
+                }
             }
         }
     }
@@ -105,7 +120,7 @@ public class Elevator implements Runnable{
         //check if any passengers need to get off
         int i = 0;
         while (i < destinationFloors.size()) {
-            if (state.getFloorLevel() == destinationFloors.get(i)) {
+            if (floorLevel == destinationFloors.get(i)) {
                 System.out.println("Elevator " + id + " Arrived at floor \n"
                         + destinationFloors.get(i) + "\n");
                 destinationFloors.remove(i);
@@ -120,7 +135,7 @@ public class Elevator implements Runnable{
         // Check if elevator floor and a command floor are equal.
         int i = 0;
         while (i < commands.size()) {
-            if (state.getFloorLevel() == commands.get(i).getFloor()) {
+            if (floorLevel == commands.get(i).getFloor()) {
                 System.out.println("Elevator " + id
                         + " Picking Up passenger with command:\n"
                         + commands.get(i) + "\n");
@@ -132,43 +147,37 @@ public class Elevator implements Runnable{
 
 
     /**
-     * Getter method for the state of elevator
-     * @return the ElevatorState of the elevator
-     */
-    public ElevatorState getState() {
-        return state;
-    }
-
-
-    /**
      * Moves the elevator up or down based on the direction and idle
      * status of the elevator
      */
     private void moveFloor(){
         //Move depending on destination
-        if (state.getDirection() == Direction.UP){
-            state.goUp();
-        } else {
-            state.goDown();
+        if (direction == Direction.UP
+                && floorLevel < MAX_FLOOR_LEVEL){
+            floorLevel++;
+        } else if (floorLevel > MIN_FLOOR_LEVEL) {
+            floorLevel--;
         }
 
         //State the new floor
         System.out.println("Elevator " + id + " is now on floor: "
-                + state.getFloorLevel() + "\n");
+                + floorLevel + "\n");
 
     }
+
 
     /**
      * Send a message to the scheduler, then receive a command from the
      * scheduler.
      * @return boolean continue getting commands from the scheduler.
      */
-    public boolean retrieveCommand() {
+    public boolean retrieveCommandFromScheduler() {
 
         boolean shouldContinue = true;
 
         //Sent data to scheduler
-        byte[] sendData = Marshalling.serialize(state);
+        byte[] sendData = Marshalling.serialize(
+                new ElevatorState(direction, floorLevel, idleStatus));
         sendPacket = new DatagramPacket(sendData, sendData.length,
                 SchedulerAddress, 69);
         System.out.println("Elevator " + id + ": Sending Packet:");
@@ -237,12 +246,14 @@ public class Elevator implements Runnable{
         System.out.println("Elevator " + id + " received Command:\n" + command
                 + "\n");
         //Determine which direction to go by comparing the state and command
-        if (state.getFloorLevel() > command.getFloor()) {
-            state.setDirection(Direction.DOWN);
-        } else {
-            state.setDirection(Direction.UP);
+        if (idleStatus == true) {
+            if (floorLevel > command.getFloor()) {
+                direction = Direction.DOWN;
+            } else {
+                direction = Direction.UP;
+            }
         }
-        state.setIdleStatus(false);
+        idleStatus = false;
     }
 
 
