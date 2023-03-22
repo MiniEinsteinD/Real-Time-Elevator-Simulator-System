@@ -6,7 +6,7 @@ import java.io.Serializable;
  * system can perform at a given instance. In particuler, the class encapsules the following info about
  * the elevator: floor level, direction elevator is headed to
  *
- * Used as a serializable event for Event Model.
+ * Used as a serializable event to be sent to the scheduler.
  *
  * @author Mohammed Abu Alkhair
  *
