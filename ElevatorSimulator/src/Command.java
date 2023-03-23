@@ -74,6 +74,15 @@ public class Command implements Serializable {
         this.permanentFault = permanentFault;
     }
 
+
+    /**
+     * Setter method for faultLocation field for the command object's creation.
+     * @param faultLocation int
+     */
+    public void setFaultLocation(int faultLocation) {
+        this.faultLocation = faultLocation;
+    }
+
     /**
      * Setter method for recoverableFault field for the command object's creation.
      * @param recoverableFault boolean
@@ -96,6 +105,15 @@ public class Command implements Serializable {
      */
     public boolean isPermanentFault() {
         return permanentFault;
+    }
+
+
+    /**
+     * Getter method for faultLocation field for the command object's creation.
+     * @return faultLocation field
+     */
+    public int getFaultLocation() {
+        return faultLocation;
     }
 
     /**
