@@ -98,7 +98,8 @@ public class Elevator implements Runnable{
             } catch (InterruptedException e) {
             }
             //Keep sending until we're told to we can continue to moving
-            if (!shouldContinue) {
+            //and we aren't idle meaning we have a command to service.
+            if (!(shouldContinue || idleStatus)) {
                 passengersLeaving(); //Deal with destinations that we've reached
                 passengersEntering(); //Deal with commands that we've reached
                 moveFloor(); //Moves floor based on idle status and direction
