@@ -43,6 +43,8 @@ public class Elevator implements Runnable{
     private static final int MAX_FLOOR_LEVEL = 9;
     private static final int MIN_FLOOR_LEVEL = 1;
 
+    private static final long OPEN_CLOSE_TIME = 4831;
+
 
     /**
      * Constructs and elevator using a scheduler and id
@@ -93,6 +95,8 @@ public class Elevator implements Runnable{
             //Checks whether the elevator should go up or down.
             //Forces Elevators to take an equal number of commands
             //because they can't hog send requests to the scheduler.
+            //Realistically the time would be much less than 2s, but we have
+            //it that way so that it's easier to read the output.
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
@@ -100,9 +104,9 @@ public class Elevator implements Runnable{
             //Keep sending until we're told to we can continue to moving
             //and we aren't idle meaning we have a command to service.
             if (!(shouldContinue || idleStatus)) {
-                passengersLeaving(); //Deal with destinations that we've reached
-                passengersEntering(); //Deal with commands that we've reached
-                moveFloor(); //Moves floor based on idle status and direction
+                reachFloor(); //Handles all actions associated with reaching a
+                              //floor.
+                moveFloor(); //Moves floor based on idle status and direction.
                 //If we're out of commands and destinations, let the scheduler
                 //know they can make us change direction.
                 if (commands.size() == 0 && destinationFloors.size() == 0) {
@@ -110,6 +114,25 @@ public class Elevator implements Runnable{
                 }
             }
         }
+    }
+
+
+    /**
+     * Handles all actions associated with reaching a floor:
+     *  - Doors open
+     *  - Passengers leave
+     *  - Passengers enter
+     *  - Doors close
+     *
+     *  Handles any associated faults (door won't open, door stuck open)
+     */
+    private void reachFloor() {
+        boolean isFault;
+
+        Thread.sleep(OPEN_CLOSE_TIME); // Doors are opening.
+        passengersLeaving(); //Deal with destinations that we've reached
+        passengersEntering(); //Deal with commands that we've reached
+        Thread.sleep(OPEN_CLOSE_TIME); // Doors are closing.
     }
 
 
@@ -150,6 +173,8 @@ public class Elevator implements Runnable{
     /**
      * Moves the elevator up or down based on the direction and idle
      * status of the elevator
+     *
+     * Handles associated faults (elevator stuck between destinations)
      */
     private void moveFloor(){
         //Move depending on destination
