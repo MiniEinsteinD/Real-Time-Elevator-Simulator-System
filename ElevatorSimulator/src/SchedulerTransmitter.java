@@ -90,7 +90,8 @@ public class SchedulerTransmitter implements Runnable {
             }
 
             //get elevator state from the packet received
-            state = deserializeState(receivePacket.getData());
+            state = Marshalling.deserialize(receivePacket.getData(),
+                    ElevatorState.class);
 
             //add the port of the elevator to the portList if it does not there already
             Integer integer = receivePacket.getPort();
@@ -313,80 +314,6 @@ public class SchedulerTransmitter implements Runnable {
         return bestCommand;
     }
 
-    /**
-     * Serializes a Command object into a byte array.
-     * @param command the Command object to be serialized
-     * @return a byte array representing the serialized Command object, or null if an error occurs
-     *
-     */
-    public static byte[] serialize(Command command) {
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            ObjectOutputStream objOut = new ObjectOutputStream(out);
-            objOut.writeObject(command);
-            return out.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    /**
-     Deserializes a byte array into an Command object.
-     @param serializedMessage a byte array representing the serialized Command object
-     @return the deserialized Command object, or null if an error occurs
-     */
-    public static Command deserialize(byte[] serializedMessage) {
-        try {
-            ByteArrayInputStream in = new ByteArrayInputStream(serializedMessage);
-            ObjectInputStream objIn = new ObjectInputStream(in);
-            return (Command) objIn.readObject();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-        catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    /**
-     * Serializes a ElevatorState object into a byte array.
-     * @param state the ElevatorState object to be serialized
-     * @return a byte array representing the serialized ElevatorState object, or null if an error occurs
-     *
-     */
-    public static byte[] serializeState(ElevatorState state) {
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            ObjectOutputStream objOut = new ObjectOutputStream(out);
-            objOut.writeObject(state);
-            return out.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    /**
-     Deserializes a byte array into an ElevatorState object.
-     @param serializedMessage a byte array representing the serialized ElevatorState object
-     @return the deserialized ElevatorState object, or null if an error occurs
-     */
-    public static ElevatorState deserializeState(byte[] serializedMessage) {
-        try {
-            ByteArrayInputStream in = new ByteArrayInputStream(serializedMessage);
-            ObjectInputStream objIn = new ObjectInputStream(in);
-            return (ElevatorState) objIn.readObject();
-        } catch (IOException e) {
-        	e.printStackTrace();
-            return null;
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
 
     /**
      * Serializes a Command object and inserts the resulting bytes into a new byte array with the first byte as a 2.
@@ -398,7 +325,7 @@ public class SchedulerTransmitter implements Runnable {
      */
     public static byte[] createCommandByteArray(Command command) {
 
-        byte[] commandBytes = serialize(command);
+        byte[] commandBytes = Marshalling.serialize(command);
         byte[] result = new byte[commandBytes.length + 1];
         if(command == null) {
             result[0] = 1;

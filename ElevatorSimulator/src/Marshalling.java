@@ -9,15 +9,19 @@ public class Marshalling {
      *
      */
     public static byte[] serialize(Object object) {
+        ByteArrayOutputStream out;
+        ObjectOutputStream objOut;
+        byte[] serializedObject = null;
         try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            ObjectOutputStream objOut = new ObjectOutputStream(out);
+            out = new ByteArrayOutputStream();
+            objOut = new ObjectOutputStream(out);
             objOut.writeObject(object);
-            return out.toByteArray();
+            serializedObject = out.toByteArray();
+            objOut.close();
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
         }
+        return serializedObject;
     }
 
     /**
@@ -27,10 +31,14 @@ public class Marshalling {
      @return the deserialized object of the given type, or null if an error occurs
      */
     public static <T> T deserialize(byte[] serializedMessage, Class<T> serializedClass) {
+        ByteArrayInputStream in;
+        ObjectInputStream objIn;
+        Object obj;
         try {
-            ByteArrayInputStream in = new ByteArrayInputStream(serializedMessage);
-            ObjectInputStream objIn = new ObjectInputStream(in);
-            Object obj = objIn.readObject();
+            in = new ByteArrayInputStream(serializedMessage);
+            objIn = new ObjectInputStream(in);
+            obj = objIn.readObject();
+            objIn.close();
 
             //check the type of object
             try {

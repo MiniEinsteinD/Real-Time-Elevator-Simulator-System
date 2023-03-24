@@ -1,6 +1,4 @@
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
@@ -58,10 +56,17 @@ public class SchedulerReceiver implements Runnable {
 
             if (receivePacket.getLength() == 0){
                 exitStatus = true;
-            }
-            else{
-                ArrayList<Command> commands = deserialize(receivePacket.getData()); //grabs byte[] array and creates an ArrayList of commands
-                transmitter.placeCommandList(commands); //place the commands from the list onto the transmitter class
+            } else {
+                //grabs byte[] array and creates an ArrayList of command objects
+                for (Object obj : Marshalling.deserialize(receivePacket.getData(), ArrayList.class)) {
+                    if (obj instanceof Command) {
+                        //place the commands from the list onto the transmitter class
+                        transmitter.placeCommand((Command) obj);
+                    } else {
+                        throw new RuntimeException("Unexpected object type "
+                               + "obtained from Floor subsystem.");
+                    }
+                }
             }
 
             sendPacket = new DatagramPacket(echoArray, echoArray.length, receivePacket.getAddress(), receivePacket.getPort());
@@ -74,35 +79,15 @@ public class SchedulerReceiver implements Runnable {
         }
 
         transmitter.exitThreads();
-        
+
         sendReceiveSocket.close();
     }
 
-    /**
-     * @author Mohammed Abu Alkhair
-     * EDITED BY: HASAN Al-HASOO
-     * Deserializes a byte array into an ArrayList of command objects.
-     * @param serializedMessage a byte array representing the serialized Command object
-     * @return the deserialized ArrayList of commands, or null if an error occurs
-     */
-    public static ArrayList<Command> deserialize(byte[] serializedMessage) {
-        try {
-            ByteArrayInputStream in = new ByteArrayInputStream(serializedMessage);
-            ObjectInputStream objIn = new ObjectInputStream(in);
-            return (ArrayList<Command>) objIn.readObject();
-        } catch (IOException e) {
-        	e.printStackTrace();
-            return null;
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
 
     public static void main(String args[]) {
         SchedulerReceiver receiver;
         SchedulerTransmitter transmitter;
-        DatagramSocket sendReceiveSocket = null, sendReceiveSocketTransmitter = null;
+        DatagramSocket sendReceiveSocket = null;
 
         try {
             // Construct a datagram socket and bind it to port 69
@@ -122,7 +107,7 @@ public class SchedulerReceiver implements Runnable {
 
         Thread transmitterThread = new Thread(transmitter, "transmitter");
         Thread receiverThread = new Thread(receiver, "receiver");
-        
+
         transmitterThread.start();
         receiverThread.start();
     }
