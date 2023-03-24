@@ -27,7 +27,7 @@ public class SubsystemLogger {
      */
     static public void setup(String subsystemName) throws IOException {
 
-        // get the global logger to configure it
+        // get the subsystem logger to configure it
         Logger logger = Logger.getLogger(subsystemName);
 
         // suppress the logging output to the console
@@ -42,8 +42,8 @@ public class SubsystemLogger {
         fileXML = new FileHandler(subsystemName + ".xml");
 
         // create an XML formatter (comes with extra useful info)
-        formatterHTML = new XMLFormatter();
-        fileHTML.setFormatter(formatterXML);
+        formatterXML = new XMLFormatter();
+        fileXML.setFormatter(formatterXML);
         logger.addHandler(fileXML);
     }
 }

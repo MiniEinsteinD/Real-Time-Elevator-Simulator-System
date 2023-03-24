@@ -10,6 +10,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.logging.Logger;
 import java.util.*;
 
 /**
@@ -44,7 +45,7 @@ public class Elevator implements Runnable{
 
     private final static String subsystemName = "ElevatorSubsystem";
 
-    private final static Logger LOGGER = Logger.getLogger(subsystemName); // Logger for system inspection
+    private final static Logger LOGGER = Logger.getLogger(subsystemName);// Logger for system inspection
 
     /**
      * Constructs and elevator using a scheduler and id
