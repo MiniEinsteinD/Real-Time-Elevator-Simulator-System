@@ -39,6 +39,7 @@ public class SubsystemLogger {
 
         // log INFO level messages and higher
         logger.setLevel(Level.INFO);
+        fileXML = new FileHandler(subsystemName + ".xml");
 
         // create an XML formatter (comes with extra useful info)
         formatterHTML = new XMLFormatter();

@@ -42,6 +42,10 @@ public class Elevator implements Runnable{
 
     private boolean shouldExit;
 
+    private final static String subsystemName = "ElevatorSubsystem";
+
+    private final static Logger LOGGER = Logger.getLogger(subsystemName); // Logger for system inspection
+
     /**
      * Constructs and elevator using a scheduler and id
      *
@@ -321,6 +325,11 @@ public class Elevator implements Runnable{
             } catch (UnknownHostException e) {
                 throw new RuntimeException(e);
             }
+        }
+        try {
+            SubsystemLogger.setup(subsystemName);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
         Elevator elevator = new Elevator(24, name);
         Thread elevatorThread = new Thread(elevator, "Elevator");
