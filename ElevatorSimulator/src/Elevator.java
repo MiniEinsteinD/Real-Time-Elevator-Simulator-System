@@ -155,7 +155,7 @@ public class Elevator implements Runnable{
             public void run() {
                 currentThread.interrupt();
             }
-        }, 2 * OPEN_CLOSE_TIME, 2 * OPEN_CLOSE_TIME);
+        }, 4 * OPEN_CLOSE_TIME, 4 * OPEN_CLOSE_TIME);
 
         do {
             if (isRecoverableFaultFloor && !faultExercised) {
