@@ -33,13 +33,17 @@ public class Elevator implements Runnable{
 
     private InetAddress SchedulerAddress;
 
+    // Attributes determining the state of the Elevator!
     private boolean shouldExit;
 
-    private Direction direction; //direction the elevator is going toward
-    private int floorLevel; //the floor the elevator is currently at
+    private Direction direction; // direction the elevator is going toward.
+    private int floorLevel; // the floor the elevator is currently at.
     private boolean idleStatus; // whether elevator is servicing a command or
-                                // not
+                                // not.
+    private boolean hasUTurnCommand; // the next scheduled command wants us to
+                                     // immediately change directions.
 
+    // Constants for avoiding code smell.
     private static final int MAX_FLOOR_LEVEL = 9;
     private static final int MIN_FLOOR_LEVEL = 1;
 
@@ -65,6 +69,7 @@ public class Elevator implements Runnable{
         direction = Direction.UP;
         floorLevel = 1;
         idleStatus = true;
+        hasUTurnCommand = false;
 
         try {
             // Construct a datagram socket and bind it to any available
@@ -93,7 +98,11 @@ public class Elevator implements Runnable{
         while (!(shouldExit && idleStatus)) {
             shouldContinue = false;
             //Send request to elevator at the start.
-            if (!shouldExit) {
+            //When we have been told to exit that means the scheduler has no
+            //commands left.
+            //When we have a U-Turn Command we don't want to accept commands
+            //in the direction we're moving.
+            if (!(shouldExit || hasUTurnCommand)) {
                 shouldContinue = this.retrieveCommandFromScheduler();
             }
             //Checks whether the elevator should go up or down.
@@ -208,7 +217,7 @@ public class Elevator implements Runnable{
         int i = 0;
         while (i < destinationFloors.size()) {
             if (floorLevel == destinationFloors.get(i)) {
-                System.out.println("Elevator " + id + " Arrived at floor \n"
+                System.out.println("Elevator " + id + " Arrived at floor "
                         + destinationFloors.get(i) + "\n");
                 destinationFloors.remove(i);
             } else {
@@ -227,6 +236,17 @@ public class Elevator implements Runnable{
                         + " Picking Up passenger with command:\n"
                         + commands.get(i) + "\n");
                 destinationFloors.add(commands.get(i).getElevatorButton());
+                // Change directions if the command is the special case where
+                // we had to move the direction opposite to where the passenger
+                // wants to go so that we could pick up the passenger.
+                // We only accept these one at a time.
+                if (hasUTurnCommand) {
+                    direction = commands.get(i).getDirectionButton();
+                    System.out.println("Elevator " + id + " is now moving "
+                            + direction);
+
+                    hasUTurnCommand = false;
+                }
                 commands.remove(i);
             } else {
                 ++i;
@@ -277,33 +297,6 @@ public class Elevator implements Runnable{
                 } catch (InterruptedException e) {
                     throw new RuntimeException("Elevator stalled between "
                     + "floors");
-                }
-            }
-        }
-
-
-        // Change directions if we only have destinations in the
-        // direction we aren't moving.
-        // TODO: Being given a command to pick up a passenger on
-        // a floor above the Elevator should not cause the
-        // Elevator to continue accepting commands above it.
-        if (commands.size() == 0) {
-            i = 0;
-            while (!hasSameDirection && i < destinationFloors.size()) {
-                if (direction == Direction.UP
-                        && destinationFloors.get(i) > floorLevel) {
-                    hasSameDirection = true;
-                } else if (direction == Direction.DOWN
-                        && destinationFloors.get(i) < floorLevel) {
-                    hasSameDirection = true;
-                }
-                ++i;
-            }
-            if (!hasSameDirection) {
-                if (direction == Direction.UP) {
-                    direction = Direction.DOWN;
-                } else {
-                    direction = Direction.UP;
                 }
             }
         }
@@ -431,12 +424,20 @@ public class Elevator implements Runnable{
                 + "\n");
         //Determine which direction to go by comparing the state and command
         if (idleStatus == true) {
+            //Find the direction to move to get to the passenger.
             if (floorLevel < command.getFloor()) {
                 direction = Direction.UP;
             } else if (floorLevel > command.getFloor()) {
                 direction = Direction.DOWN;
             } else {
                 direction = command.getDirectionButton();
+            }
+            //The passenger wants to move in the direction opposite from where
+            //we move to pick them up.
+            //We need to change directions immediately after picking up the
+            //next passenger.
+            if (direction != command.getDirectionButton()) {
+                hasUTurnCommand = true;
             }
             System.out.println("Elevator " + id + " is now moving "
                     + direction);
