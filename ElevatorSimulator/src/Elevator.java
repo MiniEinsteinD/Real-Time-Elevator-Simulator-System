@@ -90,8 +90,7 @@ public class Elevator implements Runnable{
     //@Override
     public void run() {
         boolean shouldContinue;
-        while (!(shouldExit && destinationFloors.isEmpty()
-                    && commands.size() == 0)) {
+        while (!(shouldExit && idleStatus)) {
             shouldContinue = false;
             //Send request to elevator at the start.
             if (!shouldExit) {
@@ -109,11 +108,13 @@ public class Elevator implements Runnable{
             if (!(shouldContinue || idleStatus)) {
                 reachFloor(); //Handles all actions associated with reaching a
                               //floor.
-                moveFloor(); //Moves floor based on idle status and direction.
                 //If we're out of commands and destinations, let the scheduler
                 //know they can make us change direction.
                 if (commands.size() == 0 && destinationFloors.size() == 0) {
+                    System.out.println("Elevator " + id + " is now idle.");
                     idleStatus = true;
+                } else {
+                    moveFloor(); //Moves floor based on idle status and direction.
                 }
             }
         }
@@ -365,6 +366,7 @@ public class Elevator implements Runnable{
         } else if (data[0] == 0) {
             // Exit message
             shouldExit = true;
+            shouldContinue = false;
         } else if (data[0] == 1) {
             // No available command message
             shouldContinue = false;
@@ -400,11 +402,7 @@ public class Elevator implements Runnable{
                 + "\n");
         //Determine which direction to go by comparing the state and command
         if (idleStatus == true) {
-            if (floorLevel > command.getFloor()) {
-                direction = Direction.DOWN;
-            } else {
-                direction = Direction.UP;
-            }
+            direction = command.getDirectionButton();
         }
         idleStatus = false;
     }
