@@ -114,10 +114,13 @@ public class Elevator implements Runnable{
                     System.out.println("Elevator " + id + " is now idle.");
                     idleStatus = true;
                 } else {
-                    moveFloor(); //Moves floor based on idle status and direction.
+                    moveFloor(); //Moves floor based on idle status and
+                                 //direction.
                 }
             }
         }
+
+        System.out.println("Elevator " + id + " is exiting.");
     }
 
 
@@ -241,14 +244,13 @@ public class Elevator implements Runnable{
     private void moveFloor(){
         boolean isPermanentFaultFloor = false; // Whether or not we need to
                                                  // fault.
-        boolean faultExercised = false; // True when we've already stalled on
-                                        // a fault.
         final Thread currentThread = Thread.currentThread();
         TimerTask permanentFaultHandler = new TimerTask() {
             public void run() {
                 currentThread.interrupt();
             }
         };
+        boolean hasSameDirection = false;
         int i = 0;
         Command c;
 
@@ -275,6 +277,33 @@ public class Elevator implements Runnable{
                 } catch (InterruptedException e) {
                     throw new RuntimeException("Elevator stalled between "
                     + "floors");
+                }
+            }
+        }
+
+
+        // Change directions if we only have destinations in the
+        // direction we aren't moving.
+        // TODO: Being given a command to pick up a passenger on
+        // a floor above the Elevator should not cause the
+        // Elevator to continue accepting commands above it.
+        if (commands.size() == 0) {
+            i = 0;
+            while (!hasSameDirection && i < destinationFloors.size()) {
+                if (direction == Direction.UP
+                        && destinationFloors.get(i) > floorLevel) {
+                    hasSameDirection = true;
+                } else if (direction == Direction.DOWN
+                        && destinationFloors.get(i) < floorLevel) {
+                    hasSameDirection = true;
+                }
+                ++i;
+            }
+            if (!hasSameDirection) {
+                if (direction == Direction.UP) {
+                    direction = Direction.DOWN;
+                } else {
+                    direction = Direction.UP;
                 }
             }
         }
@@ -402,7 +431,15 @@ public class Elevator implements Runnable{
                 + "\n");
         //Determine which direction to go by comparing the state and command
         if (idleStatus == true) {
-            direction = command.getDirectionButton();
+            if (floorLevel < command.getFloor()) {
+                direction = Direction.UP;
+            } else if (floorLevel > command.getFloor()) {
+                direction = Direction.DOWN;
+            } else {
+                direction = command.getDirectionButton();
+            }
+            System.out.println("Elevator " + id + " is now moving "
+                    + direction);
         }
         idleStatus = false;
     }
