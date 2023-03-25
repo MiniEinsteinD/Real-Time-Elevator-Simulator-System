@@ -31,6 +31,8 @@ public class Elevator implements Runnable{
                                               //communicate with the scheduler
 
     private List<Integer> destinationFloors;
+    private List<Integer> recoverableFaultFloors;
+    private List<Integer> permanentFaultFloors;
 
     private InetAddress SchedulerAddress;
 
@@ -68,6 +70,8 @@ public class Elevator implements Runnable{
         this.id = id;
         commands = new ArrayList<Command>();
         destinationFloors = new ArrayList<Integer>();
+        recoverableFaultFloors = new ArrayList<Integer>();
+        permanentFaultFloors = new ArrayList<Integer>();
 
         shouldExit = false;
         direction = Direction.UP;
@@ -157,14 +161,15 @@ public class Elevator implements Runnable{
                 currentThread.interrupt();
             }
         };
+        boolean moveComplete = false; // Successfully moved one floor.
 
         int i = 0;
-        Command c;
+        int faultFloor;
 
         // Determine if we're on a recoverable fault floor.
-        while (i < commands.size()) {
-            c = commands.get(i);
-            if (c.isRecoverableFault() && (floorLevel == c.getFloor())) {
+        while (i < recoverableFaultFloors.size()) {
+            faultFloor = recoverableFaultFloors.get(i);
+            if (floorLevel == faultFloor) {
                 isRecoverableFaultFloor = true;
             }
             ++i;
@@ -175,17 +180,21 @@ public class Elevator implements Runnable{
         faultTimer.schedule(recoverableFaultHandler, 4 * OPEN_CLOSE_TIME,
                 4 * OPEN_CLOSE_TIME);
 
-        do {
+        while (!moveComplete) {
             if (isRecoverableFaultFloor && !faultExercised) {
                 // Simulate problems with doors opening.
                 // Uhoh, who put this loop here??
-                while(!Thread.currentThread().isInterrupted()) {
+                while(true) {
                     try {
                         // Amount of time is meaningless. Go with a higher value
                         // so that we don't burn clock cycles.
                         Thread.sleep(4000);
-                    } catch (InterruptedException e) {}
+                    } catch (InterruptedException e) {
+                        break;
+                    }
                 }
+                System.out.println("Elevator " + id + " handled door issues "
+                        + "on floor " + floorLevel);
                 // Don't enter this if block again.
                 faultExercised = true;
             } else {
@@ -197,18 +206,16 @@ public class Elevator implements Runnable{
                     passengersEntering(); //Deal with commands that we've
                                           //reached.
                     Thread.sleep(OPEN_CLOSE_TIME); // Doors are closing.
+                    moveComplete = true;
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-        } while(Thread.interrupted());
+        }
         // Cleanup.
         try {
             recoverableFaultHandler.cancel();
         } catch (IllegalStateException e) {}
-        // One more call to eliminate any race conditions (say we're
-        // interrupted immediately after leaving the while loop).
-        Thread.interrupted();
     }
 
 
@@ -230,7 +237,11 @@ public class Elevator implements Runnable{
         }
     }
 
-
+    /**
+     * Lets passengers onto the elevator.
+     * Removes commands at the current floor from the internal list.
+     * Records destinations and faults in internal lists.
+     */
     private void passengersEntering() {
         // Check if elevator floor and a command floor are equal.
         int i = 0;
@@ -240,6 +251,11 @@ public class Elevator implements Runnable{
                         + " Picking Up passenger with command:\n"
                         + commands.get(i) + "\n");
                 destinationFloors.add(commands.get(i).getElevatorButton());
+                if (commands.get(i).isRecoverableFault()) {
+                    recoverableFaultFloors.add(commands.get(i).getFaultLocation());
+                } else if (commands.get(i).isPermanentFault()) {
+                    permanentFaultFloors.add(commands.get(i).getFaultLocation());
+                }
                 // Change directions if the command is the special case where
                 // we had to move the direction opposite to where the passenger
                 // wants to go so that we could pick up the passenger.
@@ -276,12 +292,12 @@ public class Elevator implements Runnable{
         };
         boolean hasSameDirection = false;
         int i = 0;
-        Command c;
+        int permanentFaultFloor;
 
         // Determine if we're on a permanent fault floor.
-        while (i < commands.size()) {
-            c = commands.get(i);
-            if (c.isPermanentFault() && (floorLevel == c.getFloor())) {
+        while (i < permanentFaultFloors.size()) {
+            permanentFaultFloor = permanentFaultFloors.get(i);
+            if (floorLevel == permanentFaultFloor) {
                 isPermanentFaultFloor = true;
             }
             ++i;
@@ -299,8 +315,8 @@ public class Elevator implements Runnable{
                     // so that we don't burn clock cycles.
                     Thread.sleep(4000);
                 } catch (InterruptedException e) {
-                    throw new RuntimeException("Elevator stalled between "
-                    + "floors");
+                    throw new RuntimeException("Elevator " + id
+                            + " stalled between floors");
                 }
             }
         }

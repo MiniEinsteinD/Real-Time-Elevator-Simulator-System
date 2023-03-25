@@ -211,6 +211,12 @@ public class SchedulerTransmitter implements Runnable {
         Command bestCommand = null; //the best command to be returned
         int minDistance = Integer.MAX_VALUE; //the minimum distance available between the elevator and a command
 
+        //whether or not the passenger wants to move in a direction other than
+        //the direction the elevator moves to pick them up. Elevator treats this
+        //as a special case and we want to avoid it when possible.
+        //Only important when Elevator is idle.
+        boolean bestCommandHasUTurn = true;
+
         //check if the elevator is idle or not
         if (state.isIdleStatus()) { // if elevator is idle
             if (commands.isEmpty()) { // if there are no commands
@@ -220,14 +226,23 @@ public class SchedulerTransmitter implements Runnable {
                 for (Command command : commands) {
                     int commandFloor = command.getFloor(); //the level at which the passenger is at
                     Direction commandDirection = command.getDirectionButton(); //the direction the passenger want to go toward
+                    //whether or not the passenger wants to move in a direction other than
+                    //the direction the elevator moves to pick them up. Elevator treats this
+                    //as a special case and we want to avoid it when possible.
+                    boolean commandHasUTurn = ((commandFloor < elevatorFloor) && (commandDirection == Direction.UP))
+                        || ((commandFloor > elevatorFloor) && (commandDirection == Direction.DOWN));
+
 
                     // calculate the distance between elevator's current floor and command's floor
                     int distance = Math.abs(elevatorFloor - commandFloor);
 
                     // check if the distance is less than the minimum distance seen so far
-                    if (distance < minDistance) {
+                    // prioritize commands that don't require a U-Turn.
+                    if ((distance < minDistance && (!commandHasUTurn || bestCommandHasUTurn))
+                            || (!commandHasUTurn && bestCommandHasUTurn)) {
                         bestCommand = command;
                         minDistance = distance;
+                        bestCommandHasUTurn = commandHasUTurn;
                     }
                 }
                 removeCommand(bestCommand);
