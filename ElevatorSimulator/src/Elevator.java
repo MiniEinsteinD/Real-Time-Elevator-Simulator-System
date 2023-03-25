@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.logging.Logger;
 import java.util.*;
 
 /**
@@ -34,6 +35,10 @@ public class Elevator implements Runnable{
     private InetAddress SchedulerAddress;
 
     private boolean shouldExit;
+
+    private final static String subsystemName = "ElevatorSubsystem";
+
+    private final static Logger LOGGER = Logger.getLogger(subsystemName);// Logger for system inspection
 
     private Direction direction; //direction the elevator is going toward
     private int floorLevel; //the floor the elevator is currently at
@@ -409,6 +414,12 @@ public class Elevator implements Runnable{
                 throw new RuntimeException(e);
             }
         }
+        try {
+            SubsystemLogger.setup(subsystemName);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
         Elevator elevator1 = new Elevator(1, name);
         Elevator elevator2 = new Elevator(2, name);
         Elevator elevator3 = new Elevator(3, name);

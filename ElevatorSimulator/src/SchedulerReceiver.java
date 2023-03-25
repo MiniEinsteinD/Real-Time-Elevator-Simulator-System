@@ -3,6 +3,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 /**
  * @author Hasan Al-Hasoo
@@ -20,6 +21,10 @@ public class SchedulerReceiver implements Runnable {
     private DatagramSocket sendReceiveSocket;
 
     private SchedulerTransmitter transmitter;
+
+    private final static String subsystemName = "SchedulerSubsystem";
+
+    private final static Logger LOGGER = Logger.getLogger(subsystemName);// Logger for system inspection
 
     /**
      * Constructor for SchedulerReceiver class. Instantiates DatagramSocket and opens port 23
@@ -101,6 +106,11 @@ public class SchedulerReceiver implements Runnable {
             System.exit(1);
         }
 
+        try {
+            SubsystemLogger.setup(subsystemName);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         transmitter = new SchedulerTransmitter();
         receiver = new SchedulerReceiver(transmitter, sendReceiveSocket);

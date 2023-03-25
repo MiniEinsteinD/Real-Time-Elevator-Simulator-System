@@ -2,6 +2,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.net.*;
 import java.util.Comparator;
+import java.util.logging.Logger;
 
 /**
  * The Floor class represents the floor subsystem
@@ -17,6 +18,10 @@ import java.util.Comparator;
     private DatagramPacket sendPacket;
     private DatagramPacket receivePacket;
     private InetAddress SchedulerAddress;
+
+    private final static String subsystemName = "FloorSubsystem";
+
+    private final static Logger LOGGER = Logger.getLogger(subsystemName);// Logger for system inspection
 
     /**
      * Constructs a floor using a file, a socket. The address of the local
@@ -187,13 +192,18 @@ import java.util.Comparator;
             } catch (UnknownHostException e) {
                 throw new RuntimeException(e);
             }
-        }
-        else {
+        } else {
             try {
                 name = InetAddress.getByName(args[0]);
             } catch (UnknownHostException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        try {
+            SubsystemLogger.setup(subsystemName);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
 		try {
