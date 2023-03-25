@@ -100,10 +100,8 @@ public class Elevator implements Runnable{
             //Checks whether the elevator should go up or down.
             //Forces Elevators to take an equal number of commands
             //because they can't hog send requests to the scheduler.
-            //Realistically the time would be much less than 2s, but we have
-            //it that way so that it's easier to read the output.
             try {
-                Thread.sleep(2000);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
             }
             //Keep sending until we're told to we can continue to moving
@@ -137,6 +135,12 @@ public class Elevator implements Runnable{
         boolean faultExercised = false; // True when we've already stalled on
                                         // a fault.
         final Thread currentThread = Thread.currentThread();
+        TimerTask recoverableFaultHandler = new TimerTask() {
+            public void run() {
+                currentThread.interrupt();
+            }
+        };
+
         int i = 0;
         Command c;
 
@@ -151,11 +155,8 @@ public class Elevator implements Runnable{
 
         // Schedule an interrupt if we're stuck on a fault.
         // Repeat in case fault persists.
-        faultTimer.schedule(new TimerTask() {
-            public void run() {
-                currentThread.interrupt();
-            }
-        }, 4 * OPEN_CLOSE_TIME, 4 * OPEN_CLOSE_TIME);
+        faultTimer.schedule(recoverableFaultHandler, 4 * OPEN_CLOSE_TIME,
+                4 * OPEN_CLOSE_TIME);
 
         do {
             if (isRecoverableFaultFloor && !faultExercised) {
@@ -185,7 +186,9 @@ public class Elevator implements Runnable{
             }
         } while(Thread.interrupted());
         // Cleanup.
-        faultTimer.cancel();
+        try {
+            recoverableFaultHandler.cancel();
+        } catch (IllegalStateException e) {}
         // One more call to eliminate any race conditions (say we're
         // interrupted immediately after leaving the while loop).
         Thread.interrupted();
@@ -240,6 +243,11 @@ public class Elevator implements Runnable{
         boolean faultExercised = false; // True when we've already stalled on
                                         // a fault.
         final Thread currentThread = Thread.currentThread();
+        TimerTask permanentFaultHandler = new TimerTask() {
+            public void run() {
+                currentThread.interrupt();
+            }
+        };
         int i = 0;
         Command c;
 
@@ -253,11 +261,7 @@ public class Elevator implements Runnable{
         }
 
         // Schedule an interrupt if we're stuck on a fault.
-        faultTimer.schedule(new TimerTask() {
-            public void run() {
-                currentThread.interrupt();
-            }
-        }, 2 * MOVE_ONE_FLOOR_TIME);
+        faultTimer.schedule(permanentFaultHandler, 2 * MOVE_ONE_FLOOR_TIME);
 
         // Simulate elevator being stuck in place.
         if (isPermanentFaultFloor) {
@@ -285,8 +289,12 @@ public class Elevator implements Runnable{
         if (direction == Direction.UP
                 && floorLevel < MAX_FLOOR_LEVEL){
             floorLevel++;
-        } else if (floorLevel > MIN_FLOOR_LEVEL) {
+        } else if (direction == Direction.DOWN
+                && floorLevel > MIN_FLOOR_LEVEL) {
             floorLevel--;
+        } else {
+            throw new RuntimeException("Elevator wants to move past max/min "
+                    + "floor (likely skipped a command/destination)");
         }
 
         //State the new floor
@@ -294,7 +302,9 @@ public class Elevator implements Runnable{
                 + floorLevel + "\n");
 
         // Cleanup.
-        faultTimer.cancel();
+        try {
+            permanentFaultHandler.cancel();
+        } catch (IllegalStateException e) {}
         // One more call to eliminate any race conditions (say we're
         // interrupted immediately after leaving the while loop).
         Thread.interrupted();
