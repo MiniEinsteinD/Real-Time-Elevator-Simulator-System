@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.logging.Logger;
 import java.util.*;
 
 /**
@@ -51,6 +52,9 @@ public class Elevator implements Runnable{
                                                       //the elevator door in ms
     private static final long MOVE_ONE_FLOOR_TIME = 7838; //Time to move one
                                                           //floor in ms
+    private final static String subsystemName = "ElevatorSubsystem";
+
+    private final static Logger LOGGER = Logger.getLogger(subsystemName);// Logger for system inspection
 
     private Timer faultTimer = new Timer(); // Timer for interrupting on a
                                             // fault.
@@ -463,6 +467,12 @@ public class Elevator implements Runnable{
                 throw new RuntimeException(e);
             }
         }
+        try {
+            SubsystemLogger.setup(subsystemName);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
         Elevator elevator1 = new Elevator(1, name);
         Elevator elevator2 = new Elevator(2, name);
         Elevator elevator3 = new Elevator(3, name);
