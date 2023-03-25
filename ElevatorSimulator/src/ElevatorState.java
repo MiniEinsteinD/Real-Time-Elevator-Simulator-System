@@ -82,4 +82,23 @@ public class ElevatorState implements Serializable {
     public void setIdleStatus(boolean idleStatus) {
         this.idleStatus = idleStatus;
     }
+
+    /**
+     * Compares two ElevatorState objects for equality.
+     * Returns true if and only if the two objects have the same floorLevel and direction.
+     * @param obj the object to be compared for equality with this ElevatorState object
+     * @return true if the specified object is equal to this ElevatorState object, false otherwise
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof ElevatorState)) {
+            return false;
+        }
+        ElevatorState other = (ElevatorState) obj;
+        return this.floorLevel == other.floorLevel && this.direction == other.direction;
+    }
+
 }
