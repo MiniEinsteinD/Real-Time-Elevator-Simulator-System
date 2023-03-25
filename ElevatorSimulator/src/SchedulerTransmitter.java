@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * This scheduler class communicates with the elevator class to distribute the placed commands to
@@ -18,6 +19,9 @@ public class SchedulerTransmitter implements Runnable {
     private InetAddress name;
     private List<Integer> portList;
 
+    private final static String subsystemName = "SchedulerSubsystem";
+
+    private final static Logger LOGGER = Logger.getLogger(subsystemName);// Logger for system inspection
 
     /**
      * Constructor for class SchedulerTransmitter
