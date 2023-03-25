@@ -34,17 +34,17 @@ public class Elevator implements Runnable{
 
     private InetAddress SchedulerAddress;
 
+    // Attributes determining the state of the Elevator!
     private boolean shouldExit;
 
-    private final static String subsystemName = "ElevatorSubsystem";
-
-    private final static Logger LOGGER = Logger.getLogger(subsystemName);// Logger for system inspection
-
-    private Direction direction; //direction the elevator is going toward
-    private int floorLevel; //the floor the elevator is currently at
+    private Direction direction; // direction the elevator is going toward.
+    private int floorLevel; // the floor the elevator is currently at.
     private boolean idleStatus; // whether elevator is servicing a command or
-                                // not
+                                // not.
+    private boolean hasUTurnCommand; // the next scheduled command wants us to
+                                     // immediately change directions.
 
+    // Constants for avoiding code smell.
     private static final int MAX_FLOOR_LEVEL = 9;
     private static final int MIN_FLOOR_LEVEL = 1;
 
@@ -52,6 +52,9 @@ public class Elevator implements Runnable{
                                                       //the elevator door in ms
     private static final long MOVE_ONE_FLOOR_TIME = 7838; //Time to move one
                                                           //floor in ms
+    private final static String subsystemName = "ElevatorSubsystem";
+
+    private final static Logger LOGGER = Logger.getLogger(subsystemName);// Logger for system inspection
 
     private Timer faultTimer = new Timer(); // Timer for interrupting on a
                                             // fault.
@@ -70,6 +73,7 @@ public class Elevator implements Runnable{
         direction = Direction.UP;
         floorLevel = 1;
         idleStatus = true;
+        hasUTurnCommand = false;
 
         try {
             // Construct a datagram socket and bind it to any available
@@ -95,20 +99,21 @@ public class Elevator implements Runnable{
     //@Override
     public void run() {
         boolean shouldContinue;
-        while (!(shouldExit && destinationFloors.isEmpty()
-                    && commands.size() == 0)) {
+        while (!(shouldExit && idleStatus)) {
             shouldContinue = false;
             //Send request to elevator at the start.
-            if (!shouldExit) {
+            //When we have been told to exit that means the scheduler has no
+            //commands left.
+            //When we have a U-Turn Command we don't want to accept commands
+            //in the direction we're moving.
+            if (!(shouldExit || hasUTurnCommand)) {
                 shouldContinue = this.retrieveCommandFromScheduler();
             }
             //Checks whether the elevator should go up or down.
             //Forces Elevators to take an equal number of commands
             //because they can't hog send requests to the scheduler.
-            //Realistically the time would be much less than 2s, but we have
-            //it that way so that it's easier to read the output.
             try {
-                Thread.sleep(2000);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
             }
             //Keep sending until we're told to we can continue to moving
@@ -116,14 +121,19 @@ public class Elevator implements Runnable{
             if (!(shouldContinue || idleStatus)) {
                 reachFloor(); //Handles all actions associated with reaching a
                               //floor.
-                moveFloor(); //Moves floor based on idle status and direction.
                 //If we're out of commands and destinations, let the scheduler
                 //know they can make us change direction.
                 if (commands.size() == 0 && destinationFloors.size() == 0) {
+                    System.out.println("Elevator " + id + " is now idle.");
                     idleStatus = true;
+                } else {
+                    moveFloor(); //Moves floor based on idle status and
+                                 //direction.
                 }
             }
         }
+
+        System.out.println("Elevator " + id + " is exiting.");
     }
 
 
@@ -142,6 +152,12 @@ public class Elevator implements Runnable{
         boolean faultExercised = false; // True when we've already stalled on
                                         // a fault.
         final Thread currentThread = Thread.currentThread();
+        TimerTask recoverableFaultHandler = new TimerTask() {
+            public void run() {
+                currentThread.interrupt();
+            }
+        };
+
         int i = 0;
         Command c;
 
@@ -156,11 +172,8 @@ public class Elevator implements Runnable{
 
         // Schedule an interrupt if we're stuck on a fault.
         // Repeat in case fault persists.
-        faultTimer.schedule(new TimerTask() {
-            public void run() {
-                currentThread.interrupt();
-            }
-        }, 2 * OPEN_CLOSE_TIME, 2 * OPEN_CLOSE_TIME);
+        faultTimer.schedule(recoverableFaultHandler, 4 * OPEN_CLOSE_TIME,
+                4 * OPEN_CLOSE_TIME);
 
         do {
             if (isRecoverableFaultFloor && !faultExercised) {
@@ -190,7 +203,9 @@ public class Elevator implements Runnable{
             }
         } while(Thread.interrupted());
         // Cleanup.
-        faultTimer.cancel();
+        try {
+            recoverableFaultHandler.cancel();
+        } catch (IllegalStateException e) {}
         // One more call to eliminate any race conditions (say we're
         // interrupted immediately after leaving the while loop).
         Thread.interrupted();
@@ -206,7 +221,7 @@ public class Elevator implements Runnable{
         int i = 0;
         while (i < destinationFloors.size()) {
             if (floorLevel == destinationFloors.get(i)) {
-                System.out.println("Elevator " + id + " Arrived at floor \n"
+                System.out.println("Elevator " + id + " Arrived at floor "
                         + destinationFloors.get(i) + "\n");
                 destinationFloors.remove(i);
             } else {
@@ -225,6 +240,17 @@ public class Elevator implements Runnable{
                         + " Picking Up passenger with command:\n"
                         + commands.get(i) + "\n");
                 destinationFloors.add(commands.get(i).getElevatorButton());
+                // Change directions if the command is the special case where
+                // we had to move the direction opposite to where the passenger
+                // wants to go so that we could pick up the passenger.
+                // We only accept these one at a time.
+                if (hasUTurnCommand) {
+                    direction = commands.get(i).getDirectionButton();
+                    System.out.println("Elevator " + id + " is now moving "
+                            + direction);
+
+                    hasUTurnCommand = false;
+                }
                 commands.remove(i);
             } else {
                 ++i;
@@ -242,9 +268,13 @@ public class Elevator implements Runnable{
     private void moveFloor(){
         boolean isPermanentFaultFloor = false; // Whether or not we need to
                                                  // fault.
-        boolean faultExercised = false; // True when we've already stalled on
-                                        // a fault.
         final Thread currentThread = Thread.currentThread();
+        TimerTask permanentFaultHandler = new TimerTask() {
+            public void run() {
+                currentThread.interrupt();
+            }
+        };
+        boolean hasSameDirection = false;
         int i = 0;
         Command c;
 
@@ -258,11 +288,7 @@ public class Elevator implements Runnable{
         }
 
         // Schedule an interrupt if we're stuck on a fault.
-        faultTimer.schedule(new TimerTask() {
-            public void run() {
-                currentThread.interrupt();
-            }
-        }, 2 * MOVE_ONE_FLOOR_TIME);
+        faultTimer.schedule(permanentFaultHandler, 2 * MOVE_ONE_FLOOR_TIME);
 
         // Simulate elevator being stuck in place.
         if (isPermanentFaultFloor) {
@@ -290,8 +316,12 @@ public class Elevator implements Runnable{
         if (direction == Direction.UP
                 && floorLevel < MAX_FLOOR_LEVEL){
             floorLevel++;
-        } else if (floorLevel > MIN_FLOOR_LEVEL) {
+        } else if (direction == Direction.DOWN
+                && floorLevel > MIN_FLOOR_LEVEL) {
             floorLevel--;
+        } else {
+            throw new RuntimeException("Elevator wants to move past max/min "
+                    + "floor (likely skipped a command/destination)");
         }
 
         //State the new floor
@@ -299,7 +329,9 @@ public class Elevator implements Runnable{
                 + floorLevel + "\n");
 
         // Cleanup.
-        faultTimer.cancel();
+        try {
+            permanentFaultHandler.cancel();
+        } catch (IllegalStateException e) {}
         // One more call to eliminate any race conditions (say we're
         // interrupted immediately after leaving the while loop).
         Thread.interrupted();
@@ -353,16 +385,25 @@ public class Elevator implements Runnable{
         // Process the received datagram.
         System.out.println("Elevator " + id + ": Packet Received:");
 
-        int len = receivePacket.getLength();
-        if (len == 0) {
+        // Handle exit/no-available-command/command messages differently
+        if (receivePacket.getLength() == 0) {
+            throw new RuntimeException("Invalid length for message received "
+                + "from Scheduler.");
+        } else if (data[0] == 0) {
+            // Exit message
             shouldExit = true;
+            shouldContinue = false;
+        } else if (data[0] == 1) {
+            // No available command message
+            shouldContinue = false;
+        } else if (data[0] == 2) {
+            // Command message
+            Command command = Marshalling.deserialize(Arrays.copyOfRange(data, 1, data.length),
+                Command.class);
+            addCommand(command);
         } else {
-            Command command = Marshalling.deserialize(data, Command.class);
-            if (command == null) {
-                shouldContinue = false;
-            } else {
-                this.addCommand(command);
-            }
+            throw new RuntimeException("Invalid format for message received "
+                + "from Scheduler.");
         }
 
 
@@ -387,11 +428,23 @@ public class Elevator implements Runnable{
                 + "\n");
         //Determine which direction to go by comparing the state and command
         if (idleStatus == true) {
-            if (floorLevel > command.getFloor()) {
+            //Find the direction to move to get to the passenger.
+            if (floorLevel < command.getFloor()) {
+                direction = Direction.UP;
+            } else if (floorLevel > command.getFloor()) {
                 direction = Direction.DOWN;
             } else {
-                direction = Direction.UP;
+                direction = command.getDirectionButton();
             }
+            //The passenger wants to move in the direction opposite from where
+            //we move to pick them up.
+            //We need to change directions immediately after picking up the
+            //next passenger.
+            if (direction != command.getDirectionButton()) {
+                hasUTurnCommand = true;
+            }
+            System.out.println("Elevator " + id + " is now moving "
+                    + direction);
         }
         idleStatus = false;
     }
