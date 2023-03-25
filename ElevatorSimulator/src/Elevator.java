@@ -348,16 +348,24 @@ public class Elevator implements Runnable{
         // Process the received datagram.
         System.out.println("Elevator " + id + ": Packet Received:");
 
-        int len = receivePacket.getLength();
-        if (len == 0) {
+        // Handle exit/no-available-command/command messages differently
+        if (receivePacket.getLength() == 0) {
+            throw new RuntimeException("Invalid length for message received "
+                + "from Scheduler.");
+        } else if (data[0] == 0) {
+            // Exit message
             shouldExit = true;
+        } else if (data[0] == 1) {
+            // No available command message
+            shouldContinue = false;
+        } else if (data[0] == 2) {
+            // Command message
+            Command command = Marshalling.deserialize(Arrays.copyOfRange(data, 1, data.length),
+                Command.class);
+            addCommand(command);
         } else {
-            Command command = Marshalling.deserialize(data, Command.class);
-            if (command == null) {
-                shouldContinue = false;
-            } else {
-                this.addCommand(command);
-            }
+            throw new RuntimeException("Invalid format for message received "
+                + "from Scheduler.");
         }
 
 
