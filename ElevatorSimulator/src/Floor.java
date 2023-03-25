@@ -125,7 +125,7 @@ import java.util.logging.Logger;
 
         while (!commandList.isEmpty()) {
             // Wait until the time specified by the next command
-            Thread.sleep(commandList.get(0).getTime() - counter);
+            Thread.sleep((commandList.get(0).getTime() - counter) * 1000);
             counter = commandList.get(0).getTime();
 
             // Add all commands with the current time to the list to send
