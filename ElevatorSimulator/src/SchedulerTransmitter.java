@@ -147,27 +147,7 @@ public class SchedulerTransmitter implements Runnable {
                 System.exit(1);
             }
         }
-
         sendReceiveSocket.close();
-
-    }
-
-    /**
-     * Method used to add a list of commands that need to be
-     * serviced
-     * @param commandList arrayList of commands to be serviced
-     */
-    public synchronized void placeCommandList(ArrayList<Command> commandList) {
-        while (!commands.isEmpty()) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                System.err.println(e);
-            }
-        }
-        System.out.println("Scheduler has received the command list from the floor subsystem:\n");
-        commands = new ArrayList<Command>(commandList);
-        notifyAll();
     }
 
     /**
@@ -211,43 +191,6 @@ public class SchedulerTransmitter implements Runnable {
                 commands.remove(i);
             }
         }
-    }
-
-    /**
-     * Method used to obtain the next command for servicing from the ArrayList of commands
-     * @return The next command which will be serviced (index 0)
-     */
-    public synchronized Command getCommands() {
-        while (commands.isEmpty()) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                System.err.println(e);
-            }
-        }
-        Command command = commands.remove(0);
-        System.out.println("Scheduler has passed the following command to the elevator :\n"
-                + command);
-        notifyAll();
-        return command;
-    }
-
-    /**
-     * Method used to obtain the command list for servicing from the ArrayList of commands
-     * @return The command list
-     */
-    public synchronized ArrayList<Command> getCommandList() {
-        while (commands.isEmpty()) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                System.err.println(e);
-            }
-        }
-        ArrayList<Command> commandlist = new ArrayList<Command>(commands);
-        System.out.println("Scheduler has passed the command list to the elevator :\n");
-        notifyAll();
-        return commandlist;
     }
 
     /**
@@ -314,7 +257,6 @@ public class SchedulerTransmitter implements Runnable {
         return bestCommand;
     }
 
-
     /**
      * Serializes a Command object and inserts the resulting bytes into a new byte array with the first byte as a 2.
      * The resulting byte array will have a length of commandBytes length + 1, with the byte 2 at index 0 and
@@ -336,10 +278,4 @@ public class SchedulerTransmitter implements Runnable {
         System.arraycopy(commandBytes, 0, result, 1, commandBytes.length);
         return result;
     }
-
-    public static void main(String args[])
-    {
-    }
-
-
 }
