@@ -22,72 +22,95 @@ import org.mockito.stubbing.Answer;
 
 /**
  * Tests for the Floor class.
- * 
+ *
  * @author Ethan Leir 101146422
  * @version 1.0
+ *
+ * @author Ali El-Khatib 101189859
+ * @version 2.0
  */
 @ExtendWith(MockitoExtension.class)
 public class FloorTest {
     private Floor floor;
-    private Command command;
+    private Command command1;
+    private Command command2;
+    private Command command3;
+    private Command command4;
     private DatagramSocket socketMock;
-    
+
     private ArrayList<DatagramPacket> sendPackets;
 
     @Before
     public void setupMocks() {
-    	sendPackets = new ArrayList<DatagramPacket>();
-        File file = new File("singleCommand.txt");
-        this.command = new Command("10 4 down 2");
+        sendPackets = new ArrayList<DatagramPacket>();
+        File file = new File("floorTestText.txt");
+        this.command1 = new Command("7 3 up 6");
+        this.command2 = new Command("10 4 down 2");
+        this.command3 = new Command("10 6 down 4");
+        this.command4 = new Command("8 5 up 3");
         socketMock = mock(DatagramSocket.class);
 
         this.floor = new Floor(file, socketMock);
-        
+
         // Track packets being sent by socketMock.send()
         try {
             doAnswer(
-                new Answer<Void>() {
-                    public Void answer(InvocationOnMock invocation) {
-                        Object[] args = invocation.getArguments();
-                        Object mock = invocation.getMock();
+                    new Answer<Void>() {
+                        public Void answer(InvocationOnMock invocation) {
+                            Object[] args = invocation.getArguments();
+                            Object mock = invocation.getMock();
 
-                        if (args[0] instanceof DatagramPacket) {
-                            sendPackets.add((DatagramPacket) args[0]);
+                            if (args[0] instanceof DatagramPacket) {
+                                sendPackets.add((DatagramPacket) args[0]);
+                            }
+                            return null;
                         }
-                        return null;
-                    }
-            }).when(socketMock).send(any(DatagramPacket.class));
+                    }).when(socketMock).send(any(DatagramPacket.class));
         } catch (IOException e) {
-        	e.printStackTrace();
+            e.printStackTrace();
         }
     }
 
     /**
      * Test for the Floor.run() method.
-     * Asserts that the correct message is printed.
-     * Asserts that Scheduler.exitThreads() was called the correct
-     * number of times when only one command is provided.
+     * Asserts that the correct number of sends were made.
+     * Asserts that the messages passed to send are correct.
+     * @throws InterruptedException
      */
     @Test
-    public void testRun() {
+    public void testRun() throws InterruptedException {
         floor.startSubsystem();
 
         // See if we sent the correct command the correct number of times.
-        Assert.assertEquals(sendPackets.size(), 2);
+        Assert.assertEquals(sendPackets.size(), 4);
         try {
-			verify(socketMock, times(1)).send(sendPackets.get(0));
-			verify(socketMock, times(1)).send(sendPackets.get(1));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        
+            verify(socketMock, times(1)).send(sendPackets.get(0));
+            verify(socketMock, times(1)).send(sendPackets.get(1));
+            verify(socketMock, times(1)).send(sendPackets.get(2));
+            verify(socketMock, times(1)).send(sendPackets.get(3));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
         // Can't verify receive because we don't have its arguments.
-        
-        // See if the messages are correct. 
-        ArrayList<Command> commands = deserialize(sendPackets.get(0).getData());
-        Assert.assertEquals(commands.size(), 1);
-        Assert.assertEquals(commands.get(0), command);
+
+        // See if the messages are correct.
+        ArrayList<Command> commands1 = deserialize(sendPackets.get(0).getData());
+        Assert.assertEquals(commands1.size(), 1);
+        Assert.assertEquals(commands1.get(0), command1);
+
+        //Check if the sorting worked and the second command is at time 8
+        ArrayList<Command> commands2 = deserialize(sendPackets.get(1).getData());
+        Assert.assertEquals(commands2.size(), 1);
+        Assert.assertEquals(commands2.get(0), command4);
+
+        //Check if the 2 commands with same time are sent at the same time
+        ArrayList<Command> commands3 = deserialize(sendPackets.get(2).getData());
+        Assert.assertEquals(commands3.size(), 2);
+        Assert.assertEquals(commands3.get(0), command2);
+        Assert.assertEquals(commands3.get(1), command3);
+
     }
 
     /**
@@ -103,12 +126,12 @@ public class FloorTest {
             ObjectInputStream objIn = new ObjectInputStream(in);
             return (ArrayList<Command>) objIn.readObject();
         } catch (IOException e) {
-        	e.printStackTrace();
+            e.printStackTrace();
             return null;
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             return null;
         }
     }
-    
+
 }
