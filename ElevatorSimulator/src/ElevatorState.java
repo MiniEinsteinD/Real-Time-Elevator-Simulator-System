@@ -6,6 +6,8 @@ import java.io.Serializable;
  * system can perform at a given instance. In particuler, the class encapsules the following info about
  * the elevator: floor level, direction elevator is headed to
  *
+ * Used as a serializable event to be sent to the scheduler.
+ *
  * @author Mohammed Abu Alkhair
  *
  */
@@ -14,9 +16,6 @@ public class ElevatorState implements Serializable {
     private Direction direction; //direction the elevator is going toward
     private int floorLevel; //the floor the elevator is currently at
     private boolean idleStatus; // whether elevator is servicing a command or not
-    
-    private static final int MAX = 9;
-    private static final int MIN = 1;
 
 
     /**
@@ -27,6 +26,13 @@ public class ElevatorState implements Serializable {
         direction = Direction.UP;
         floorLevel = 1;
         idleStatus = true;
+    }
+
+
+    public ElevatorState(Direction direction, int floorLevel, boolean idleStatus) {
+        this.direction = direction;
+        this.floorLevel = floorLevel;
+        this.idleStatus = idleStatus;
     }
 
     /**
@@ -59,24 +65,6 @@ public class ElevatorState implements Serializable {
      */
     public void setFloorLevel(int floorLevel) {
         this.floorLevel = floorLevel;
-    }
-
-    /**
-     * Go up 1 floor but don't go over max
-     */
-    public void goUp() {
-    	if (this.floorLevel < MAX) {
-    		this.floorLevel++;
-    	}
-    }
-
-    /**
-     * Go down 1 floor but don't go under min
-     */
-    public void goDown() {
-    	if (this.floorLevel > MIN) {
-    		this.floorLevel--;
-    	}
     }
 
     /**
