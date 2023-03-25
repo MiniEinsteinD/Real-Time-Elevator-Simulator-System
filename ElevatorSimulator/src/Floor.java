@@ -141,12 +141,8 @@ import java.util.logging.Logger;
             }
 
             //send all the commands to the scheduler
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
             try {
-                ObjectOutputStream oos = new ObjectOutputStream(bos);
-                oos.writeObject(tempList);
-                oos.flush();
-                byte[] data = bos.toByteArray();
+                byte[] data = Marshalling.serialize(tempList);
 
                 for (Command c: tempList) {
                     System.out.println(c +" \n\n\n");
@@ -162,12 +158,7 @@ import java.util.logging.Logger;
                 System.out.println("Floor: Receiving confirmation of completion from the Scheduler subsystem.");
                 sendReceiveSocket.receive(receivePacket);
 
-            } catch (IOException ioe) {} finally {
-                // Cleanup
-                try {
-                    bos.close();
-                } catch (IOException ioe) {}
-            }
+            } catch (IOException ioe) {}
         }
 
 

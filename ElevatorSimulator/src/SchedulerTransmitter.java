@@ -94,7 +94,8 @@ public class SchedulerTransmitter implements Runnable {
             }
 
             //get elevator state from the packet received
-            state = deserializeState(receivePacket.getData());
+            state = Marshalling.deserialize(receivePacket.getData(),
+                    ElevatorState.class);
 
             //add the port of the elevator to the portList if it does not there already
             Integer integer = receivePacket.getPort();
@@ -150,27 +151,7 @@ public class SchedulerTransmitter implements Runnable {
                 System.exit(1);
             }
         }
-
         sendReceiveSocket.close();
-
-    }
-
-    /**
-     * Method used to add a list of commands that need to be
-     * serviced
-     * @param commandList arrayList of commands to be serviced
-     */
-    public synchronized void placeCommandList(ArrayList<Command> commandList) {
-        while (!commands.isEmpty()) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                System.err.println(e);
-            }
-        }
-        System.out.println("Scheduler has received the command list from the floor subsystem:\n");
-        commands = new ArrayList<Command>(commandList);
-        notifyAll();
     }
 
     /**
@@ -214,43 +195,6 @@ public class SchedulerTransmitter implements Runnable {
                 commands.remove(i);
             }
         }
-    }
-
-    /**
-     * Method used to obtain the next command for servicing from the ArrayList of commands
-     * @return The next command which will be serviced (index 0)
-     */
-    public synchronized Command getCommands() {
-        while (commands.isEmpty()) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                System.err.println(e);
-            }
-        }
-        Command command = commands.remove(0);
-        System.out.println("Scheduler has passed the following command to the elevator :\n"
-                + command);
-        notifyAll();
-        return command;
-    }
-
-    /**
-     * Method used to obtain the command list for servicing from the ArrayList of commands
-     * @return The command list
-     */
-    public synchronized ArrayList<Command> getCommandList() {
-        while (commands.isEmpty()) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                System.err.println(e);
-            }
-        }
-        ArrayList<Command> commandlist = new ArrayList<Command>(commands);
-        System.out.println("Scheduler has passed the command list to the elevator :\n");
-        notifyAll();
-        return commandlist;
     }
 
     /**
@@ -318,81 +262,6 @@ public class SchedulerTransmitter implements Runnable {
     }
 
     /**
-     * Serializes a Command object into a byte array.
-     * @param command the Command object to be serialized
-     * @return a byte array representing the serialized Command object, or null if an error occurs
-     *
-     */
-    public static byte[] serialize(Command command) {
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            ObjectOutputStream objOut = new ObjectOutputStream(out);
-            objOut.writeObject(command);
-            return out.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    /**
-     Deserializes a byte array into an Command object.
-     @param serializedMessage a byte array representing the serialized Command object
-     @return the deserialized Command object, or null if an error occurs
-     */
-    public static Command deserialize(byte[] serializedMessage) {
-        try {
-            ByteArrayInputStream in = new ByteArrayInputStream(serializedMessage);
-            ObjectInputStream objIn = new ObjectInputStream(in);
-            return (Command) objIn.readObject();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-        catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    /**
-     * Serializes a ElevatorState object into a byte array.
-     * @param state the ElevatorState object to be serialized
-     * @return a byte array representing the serialized ElevatorState object, or null if an error occurs
-     *
-     */
-    public static byte[] serializeState(ElevatorState state) {
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            ObjectOutputStream objOut = new ObjectOutputStream(out);
-            objOut.writeObject(state);
-            return out.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    /**
-     Deserializes a byte array into an ElevatorState object.
-     @param serializedMessage a byte array representing the serialized ElevatorState object
-     @return the deserialized ElevatorState object, or null if an error occurs
-     */
-    public static ElevatorState deserializeState(byte[] serializedMessage) {
-        try {
-            ByteArrayInputStream in = new ByteArrayInputStream(serializedMessage);
-            ObjectInputStream objIn = new ObjectInputStream(in);
-            return (ElevatorState) objIn.readObject();
-        } catch (IOException e) {
-        	e.printStackTrace();
-            return null;
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    /**
      * Serializes a Command object and inserts the resulting bytes into a new byte array with the first byte as a 2.
      * The resulting byte array will have a length of commandBytes length + 1, with the byte 2 at index 0 and
      * the serialized command bytes starting at index 1.
@@ -402,7 +271,7 @@ public class SchedulerTransmitter implements Runnable {
      */
     public static byte[] createCommandByteArray(Command command) {
 
-        byte[] commandBytes = serialize(command);
+        byte[] commandBytes = Marshalling.serialize(command);
         byte[] result = new byte[commandBytes.length + 1];
         if(command == null) {
             result[0] = 1;
@@ -413,10 +282,4 @@ public class SchedulerTransmitter implements Runnable {
         System.arraycopy(commandBytes, 0, result, 1, commandBytes.length);
         return result;
     }
-
-    public static void main(String args[])
-    {
-    }
-
-
 }
