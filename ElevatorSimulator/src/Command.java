@@ -63,6 +63,7 @@ public class Command implements Serializable {
         } else {
             this.recoverableFault = false;
             this.permanentFault = false;
+            this.faultLocation = 0;
         }
     }
 
@@ -156,7 +157,10 @@ public class Command implements Serializable {
     public String toString() {
       String string = "Command Composed Of:\nTime: " + getTime()
                 + "\nFloor: " + getFloor() + "\nElevator Button Pressed: " +
-                getElevatorButton() + "\nDirection: " + getDirectionButton() + "\n";
+                getElevatorButton() + "\nDirection: " + getDirectionButton()
+                + "\nRecoverable Fault: " + isRecoverableFault()
+                + "\nPermanent Fault: " + isPermanentFault()
+                + "\nFault Location: " + getFaultLocation() + "\n";
         return string;
     }
 
