@@ -180,4 +180,10 @@ public class Command implements Serializable {
                 this.directionButton == otherCommand.directionButton &&
                 this.elevatorButton == otherCommand.elevatorButton;
     }
+
+    public static void main(String args[]) {
+        Command c  = new Command("1 2 UP 4");
+        System.out.println(c);
+
+    }
 }

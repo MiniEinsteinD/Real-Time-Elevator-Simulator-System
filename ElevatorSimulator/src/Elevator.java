@@ -134,6 +134,8 @@ public class Elevator implements Runnable{
         }
 
         System.out.println("Elevator " + id + " is exiting.");
+        faultTimer.cancel();
+        faultTimer.purge();
     }
 
 
@@ -223,6 +225,7 @@ public class Elevator implements Runnable{
             if (floorLevel == destinationFloors.get(i)) {
                 System.out.println("Elevator " + id + " Arrived at floor "
                         + destinationFloors.get(i) + "\n");
+                LOGGER.info("Elevator "+ id + " has arrived to the destination");
                 destinationFloors.remove(i);
             } else {
                 ++i;
@@ -239,6 +242,7 @@ public class Elevator implements Runnable{
                 System.out.println("Elevator " + id
                         + " Picking Up passenger with command:\n"
                         + commands.get(i) + "\n");
+                LOGGER.info("Elevator "+ id + " has picked up the passengers");
                 destinationFloors.add(commands.get(i).getElevatorButton());
                 // Change directions if the command is the special case where
                 // we had to move the direction opposite to where the passenger
@@ -353,6 +357,7 @@ public class Elevator implements Runnable{
         sendPacket = new DatagramPacket(sendData, sendData.length,
                 SchedulerAddress, 69);
         System.out.println("Elevator " + id + ": Sending Packet:");
+        LOGGER.info("Elevator "+ id + ": sends packet to transmitter " + new ElevatorState(direction, floorLevel, idleStatus));//TODO - create a variable that stores the state
 
         // Send the datagram packet to the scheduler via the send socket.
         try {
@@ -401,6 +406,7 @@ public class Elevator implements Runnable{
             Command command = Marshalling.deserialize(Arrays.copyOfRange(data, 1, data.length),
                 Command.class);
             addCommand(command);
+            LOGGER.info("Elevator "+ id + " received packet from transmitter" + command);
         } else {
             throw new RuntimeException("Invalid format for message received "
                 + "from Scheduler.");
