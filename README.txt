@@ -53,10 +53,10 @@ All contributed towards UML class diagram, Sequence Diagram(Ethan, Daniah, Moham
 
 Group Responsibilities Iteration 4 (Current Iteration):
 
-Hasan: SchedulerTransmitterTest, UML, Review Requests, Participated In Acceptance Testing
+Hasan: SchedulerTransmitterTest, UML, Review Requests, Participated In Acceptance Testing, Timing Diagram
 Ali: Floor, FloorTest, Participated In Acceptance Testing
 Daniah: Floor, Lead Acceptance Testing
-Mohammed: Elevator, Scheduler, Floor, Marshalling, Regression Testing, Code Refactoring [Played Along All Classes]
+Mohammed: Elevator, Scheduler, Floor, Marshalling, Regression Testing, Code Refactoring, Timing Diagram [Played Along All Classes]
 Ethan: Elevator, Scheduler, Floor, Marshalling, Regression Testing, Code Refactoring [Played Along All Classes]
 
 Pair #1: Hasan, Ali, Daniah
