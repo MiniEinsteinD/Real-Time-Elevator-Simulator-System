@@ -2,13 +2,14 @@ import java.io.*;
 import java.util.ArrayList;
 import java.net.*;
 import java.util.Comparator;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * The Floor class represents the floor subsystem
  *
- * @author Daniah Mohammed
- * @version 01
+ * @author Daniah Mohammed, Ali El-Khatib
+ * @version 02
  */
 
  public class Floor {
@@ -39,6 +40,7 @@ import java.util.logging.Logger;
         try {
             SchedulerAddress = InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
+            LOGGER.log(Level.SEVERE, "Error getting local host address", e);
             throw new RuntimeException(e);
         }
     }
@@ -71,6 +73,7 @@ import java.util.logging.Logger;
         try {
             bufReader = new BufferedReader(new FileReader(file.getName()));
         } catch (FileNotFoundException e) {
+            LOGGER.log(Level.SEVERE, "Error reading file", e);
             throw new RuntimeException(e);
         }
 
@@ -81,6 +84,7 @@ import java.util.logging.Logger;
         try {
             line = bufReader.readLine();
         } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Error reading file", e);
             throw new RuntimeException(e);
         }
 
@@ -89,9 +93,13 @@ import java.util.logging.Logger;
             try {
                 line = bufReader.readLine();
             } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "Error reading file", e);
                 try {
                     bufReader.close();
-                } catch (IOException ioe) {}
+                } catch (IOException ioe) {
+                    LOGGER.log(Level.SEVERE, "Error closing file", ioe);
+                }
+                LOGGER.log(Level.SEVERE, "Error closing file", e);
                 throw new RuntimeException(e);
             }
         }
@@ -99,6 +107,7 @@ import java.util.logging.Logger;
         try {
             bufReader.close();
         } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Error closing file", e);
             throw new RuntimeException(e);
         }
 
@@ -108,7 +117,7 @@ import java.util.logging.Logger;
         }
         commandList.sort(new Comparator<Command>() {
             /**
-             * Sorts starting from Earliest time
+             * Sorts starting from The Earliest time
              * @param o1 the first object to be compared.
              * @param o2 the second object to be compared.
              * @return
@@ -132,6 +141,7 @@ import java.util.logging.Logger;
             ArrayList<Command> tempList = new ArrayList<>();
             for (Command c: commandList) {
                 if (c.getTime() <= counter) {
+                    LOGGER.info("Input to an XML file: " + c.toString());
                     tempList.add(c);
                 }
             }
@@ -147,35 +157,43 @@ import java.util.logging.Logger;
                 for (Command c: tempList) {
                     System.out.println(c +" \n\n\n");
                 }
-                // Send data to SchedulerReciever
+                // Send data to SchedulerReceiver
                 sendPacket = new DatagramPacket(data, data.length, SchedulerAddress, 23);
+                LOGGER.info("Floor: Sending commands to Scheduler subsystem.");
                 System.out.println("Floor: Sending commands to Scheduler subsystem.");
                 sendReceiveSocket.send(sendPacket);
 
-                // Recieve confirmation from SchedulerReciever.
+                // Receive confirmation from SchedulerReceiver.
                 byte[] response = new byte[100];
                 receivePacket = new DatagramPacket(response, response.length);
+                LOGGER.info("Floor: Receiving confirmation of completion from the Scheduler subsystem.");
                 System.out.println("Floor: Receiving confirmation of completion from the Scheduler subsystem.");
                 sendReceiveSocket.receive(receivePacket);
 
-            } catch (IOException ioe) {}
+            } catch (IOException ioe) {
+                LOGGER.log(Level.SEVERE, "Error serializing file", ioe);
+            }
         }
 
 
         // Let the scheduler know we're done
         try {
             byte[] data = new byte[0];
-            // Send data to SchedulerReciever
+            // Send data to SchedulerReceiver
             sendPacket = new DatagramPacket(data, data.length, SchedulerAddress, 23);
+            LOGGER.info("Floor: Sending commands to Scheduler subsystem.");
             System.out.println("Floor: Sending commands to Scheduler subsystem.");
             sendReceiveSocket.send(sendPacket);
 
-            // Recieve confirmation from SchedulerReciever.
+            // Receive confirmation from SchedulerReceiver.
             byte[] response = new byte[100];
             receivePacket = new DatagramPacket(response, response.length);
+            LOGGER.info("Floor: Receiving confirmation of completion from the Scheduler subsystem.");
             System.out.println("Floor: Receiving confirmation of completion from the Scheduler subsystem.");
             sendReceiveSocket.receive(receivePacket);
-        } catch (IOException ioe) {} finally {
+        } catch (IOException ioe) {
+            LOGGER.log(Level.SEVERE, "Error closing file", ioe);
+        } finally {
             // Cleanup
             sendReceiveSocket.close();
         }
@@ -183,7 +201,6 @@ import java.util.logging.Logger;
 
     public static void main(String args[]) {
         Floor f;
-
         InetAddress name;
         if (args.length == 0) {
             try {
