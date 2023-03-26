@@ -8,7 +8,7 @@ import static org.junit.Assert.*;
 public class Regression {
 
     @Test
-    public void testAddition() {
+    public void regressiontest() {
         //modify the input file
         String commandString = "1 2 UP 4 \n";
         writeToFile("InputFileForTesting.txt", commandString);
@@ -20,10 +20,10 @@ public class Regression {
         assertTrue(stringExistsInFile("FloorSubsystem.log", floorTest1));
 
         //scheduler loggings
-        String receiverTest1 = "Scheduler Receiver has received the following command: " + "Command Composed Of:\n" + "Time: 1\n" + "Floor: 2\n" + "Elevator Button Pressed: 4\n" + "Direction: UP";
+        String receiverTest1 = "Scheduler Receiver has received the following command: " + "Command Composed Of:\n" + "Time: 1\n" + "Floor: 2\n" + "Elevator Button Pressed: 4\n" + "Direction: UP\n" + "Recoverable Fault: false\n" + "Permanent Fault: false\n" + "Fault Location: 0";
         String transmitterTest1 = "Elevator Packet Received: " + "ElevatorState: Floor Level: 1, Direction: UP, Idle Status: true";
-        String transmitterTest2 = "Transmitter sent a Packet to the elevator: " + "Command Composed Of:\n" + "Time: 1\n" + "Floor: 2\n" + "Elevator Button Pressed: 4\n" + "Direction: UP";
-        String transmitterTest3 = "Command Received by floor subsystem: " + "Command Composed Of:\n" + "Time: 1\n" + "Floor: 2\n" + "Elevator Button Pressed: 4\n" + "Direction: UP";
+        String transmitterTest2 = "Transmitter sent a Packet to the elevator: " + "Command Composed Of:\n" + "Time: 1\n" + "Floor: 2\n" + "Elevator Button Pressed: 4\n" + "Direction: UP\n" + "Recoverable Fault: false\n" + "Permanent Fault: false\n" + "Fault Location: 0";
+        String transmitterTest3 = "Command Received by floor subsystem: " + "Command Composed Of:\n" + "Time: 1\n" + "Floor: 2\n" + "Elevator Button Pressed: 4\n" + "Direction: UP\n" + "Recoverable Fault: false\n" + "Permanent Fault: false\n" + "Fault Location: 0";
 
         //test if scheduler strings are in the logger file
         assertTrue(stringExistsInFile("SchedulerSubsystem.log", receiverTest1));
