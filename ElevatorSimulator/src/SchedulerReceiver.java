@@ -42,6 +42,7 @@ public class SchedulerReceiver implements Runnable {
      */
     //@Override
     public void run() {
+        LOGGER.info("SchedulerReceiver thread started.");
 
         byte data[] = new byte[1000];
 
@@ -65,8 +66,10 @@ public class SchedulerReceiver implements Runnable {
                 //grabs byte[] array and creates an ArrayList of command objects
                 for (Object obj : Marshalling.deserialize(receivePacket.getData(), ArrayList.class)) {
                     if (obj instanceof Command) {
+                        LOGGER.info("Received command: " + obj.toString());
                         //place the commands from the list onto the transmitter class
                         transmitter.placeCommand((Command) obj);
+                        LOGGER.info("Command sent to transmitter: " + obj.toString());
                     } else {
                         throw new RuntimeException("Unexpected object type "
                                + "obtained from Floor subsystem.");
