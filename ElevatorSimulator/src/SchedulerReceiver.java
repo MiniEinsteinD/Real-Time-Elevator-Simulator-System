@@ -69,7 +69,9 @@ public class SchedulerReceiver implements Runnable {
                         LOGGER.info("Received command: " + obj.toString());
                         //place the commands from the list onto the transmitter class
                         transmitter.placeCommand((Command) obj);
-                        LOGGER.info("Command sent to transmitter: " + obj.toString());
+
+                        LOGGER.info("Scheduler Receiver has received the following command: " + (Command) obj);
+
                     } else {
                         throw new RuntimeException("Unexpected object type "
                                + "obtained from Floor subsystem.");

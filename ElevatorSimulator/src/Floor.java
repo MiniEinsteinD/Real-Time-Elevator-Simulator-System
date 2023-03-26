@@ -163,7 +163,10 @@ import java.util.logging.Logger;
                 System.out.println("Floor: Sending commands to Scheduler subsystem.");
                 sendReceiveSocket.send(sendPacket);
 
-                // Receive confirmation from SchedulerReceiver.
+                //Add the sendPacket to the logger file
+                LOGGER.info("Floor system sent a CommandList");
+
+                // Recieve confirmation from SchedulerReciever.
                 byte[] response = new byte[100];
                 receivePacket = new DatagramPacket(response, response.length);
                 LOGGER.info("Floor: Receiving confirmation of completion from the Scheduler subsystem.");
@@ -185,7 +188,12 @@ import java.util.logging.Logger;
             System.out.println("Floor: Sending commands to Scheduler subsystem.");
             sendReceiveSocket.send(sendPacket);
 
-            // Receive confirmation from SchedulerReceiver.
+
+            //Add to the logger file that the elevator is quiting
+            LOGGER.info("Floor Subsystem is quiting");
+
+            // Recieve confirmation from SchedulerReciever.
+
             byte[] response = new byte[100];
             receivePacket = new DatagramPacket(response, response.length);
             LOGGER.info("Floor: Receiving confirmation of completion from the Scheduler subsystem.");
@@ -202,7 +210,7 @@ import java.util.logging.Logger;
     public static void main(String args[]) {
         Floor f;
         InetAddress name;
-        if (args.length == 0) {
+        if (args.length != 1) {
             try {
                 //get the name of the machine
                 name = InetAddress.getLocalHost();
@@ -223,11 +231,21 @@ import java.util.logging.Logger;
             throw new RuntimeException(e);
         }
 
-		try {
-			f = new Floor(new File("commandFile.txt"), new DatagramSocket(), name);
-			f.startSubsystem();
-		} catch (SocketException | InterruptedException e) {
-			e.printStackTrace();
-		}
+        if (args.length < 2) {
+            try {
+                f = new Floor(new File("commandFile.txt"), new DatagramSocket(), name);
+                f.startSubsystem();
+            } catch (SocketException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        else {
+            try {
+                f = new Floor(new File("InputFileForTesting.txt"), new DatagramSocket(), name);
+                f.startSubsystem();
+            } catch (SocketException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

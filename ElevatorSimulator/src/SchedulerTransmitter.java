@@ -97,6 +97,9 @@ public class SchedulerTransmitter implements Runnable {
             state = Marshalling.deserialize(receivePacket.getData(),
                     ElevatorState.class);
 
+            //Add the received packet to the logger file
+            LOGGER.info("Elevator Packet Received: " + state);
+
             //add the port of the elevator to the portList if it does not there already
             Integer integer = receivePacket.getPort();
             if (!portList.contains(integer)) {
@@ -118,6 +121,9 @@ public class SchedulerTransmitter implements Runnable {
                 e.printStackTrace();
                 System.exit(1);
             }
+
+            //Add the sent packet to the logger file
+            LOGGER.info("Transmitter sent a Packet to the elevator: " + command);
         }
 
         //Exit message to send to elevators
@@ -162,6 +168,9 @@ public class SchedulerTransmitter implements Runnable {
 
         commands.add(command);
         System.out.println("Scheduler has added a command from the floor subsystem");
+
+        //Add the command to the logger file
+        LOGGER.info("Command Received by floor subsystem: " + command);
     }
 
     /**

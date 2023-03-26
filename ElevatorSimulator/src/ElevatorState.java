@@ -101,4 +101,24 @@ public class ElevatorState implements Serializable {
         return this.floorLevel == other.floorLevel && this.direction == other.direction;
     }
 
+    /**
+     * Returns a string representation of the ElevatorState object. The string representation
+     * includes the elevator's direction, floor level and idle status.
+     * @return a string representation of the ElevatorState object
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("ElevatorState: ");
+        sb.append("Floor Level: ").append(floorLevel);
+        sb.append(", Direction: ").append(direction);
+        sb.append(", Idle Status: ").append(idleStatus);
+        return sb.toString();
+    }
+
+    public static void main(String args[]) {
+        ElevatorState s = new ElevatorState();
+        System.out.println(s);
+    }
+
 }

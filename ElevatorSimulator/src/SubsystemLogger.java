@@ -1,12 +1,5 @@
 import java.io.IOException;
-import java.util.logging.FileHandler;
-import java.util.logging.Formatter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.logging.XMLFormatter;
-
-import java.util.logging.Handler;
-import java.util.logging.ConsoleHandler;
+import java.util.logging.*;
 
 /**
  * SubsystemLogger sets up a logger for a specific subsystem, based on the
@@ -18,8 +11,8 @@ import java.util.logging.ConsoleHandler;
  * @version 1.0
  */
 public class SubsystemLogger {
-    static private FileHandler fileXML;
-    static private Formatter formatterXML;
+    static private FileHandler file;
+    static private Formatter formatter;
 
     /**
      * Setup the logger based on the subsystemName.
@@ -39,11 +32,13 @@ public class SubsystemLogger {
 
         // log INFO level messages and higher
         logger.setLevel(Level.INFO);
-        fileXML = new FileHandler(subsystemName + ".xml");
+        file = new FileHandler(subsystemName + ".log");
 
         // create an XML formatter (comes with extra useful info)
-        formatterXML = new XMLFormatter();
-        fileXML.setFormatter(formatterXML);
-        logger.addHandler(fileXML);
+        formatter = new SimpleFormatter();
+        file.setFormatter(formatter);
+        logger.addHandler(file);
     }
+
+
 }
