@@ -76,8 +76,7 @@ public class Elevator implements Runnable{
         recoverableFaultFloors = new ArrayList<Integer>();
         permanentFaultFloors = new ArrayList<Integer>();
 
-        // Set closestFloor to greater than max/min possible value so it gets
-        // overwritten by first command.
+        // Set closestFloor to an illegal value to start.
         closestFloor = MAX_FLOOR_LEVEL + 1;
 
         shouldExit = false;
@@ -145,7 +144,8 @@ public class Elevator implements Runnable{
                 //If we're out of commands and destinations, let the scheduler
                 //know they can make us change direction.
                 if (commands.size() == 0 && destinationFloors.size() == 0) {
-                    System.out.println("Elevator " + id + " is now idle.");
+                    System.out.println("Elevator " + id + " is now idle."
+                            + "\n");
                     idleStatus = true;
                 } else {
                     moveFloor(); //Moves floor based on idle status and
@@ -154,7 +154,7 @@ public class Elevator implements Runnable{
             }
         }
 
-        System.out.println("Elevator " + id + " is exiting.");
+        System.out.println("Elevator " + id + " is exiting." + "\n");
         faultTimer.cancel();
         faultTimer.purge();
     }
@@ -213,7 +213,7 @@ public class Elevator implements Runnable{
                     }
                 }
                 System.out.println("Elevator " + id + " handled door issues "
-                        + "on floor " + floorLevel);
+                        + "on floor " + floorLevel + "\n");
                 // Don't enter this if block again.
                 faultExercised = true;
             } else {
@@ -284,7 +284,7 @@ public class Elevator implements Runnable{
                 if (hasUTurnCommand) {
                     direction = commands.get(i).getDirectionButton();
                     System.out.println("Elevator " + id + " is now moving "
-                            + direction);
+                            + direction + "\n");
 
                     hasUTurnCommand = false;
                 }
@@ -409,11 +409,11 @@ public class Elevator implements Runnable{
         //--------------------------------//
         byte data[] = new byte[1000];
         receivePacket = new DatagramPacket(data, data.length);
-        System.out.println("Elevator " + id + ": Waiting for Packet.\n");
+        System.out.println("Elevator " + id + ": Waiting for Packet.");
 
         // Block until a datagram packet is received from receiveSocket.
         try {
-            System.out.println("Waiting..."); // so we know we're waiting
+            System.out.println("Waiting...\n"); // so we know we're waiting
             sendRecieveSocket.receive(receivePacket);
         } catch (IOException e) {
             System.out.print("IO Exception: likely:");
@@ -423,7 +423,7 @@ public class Elevator implements Runnable{
         }
 
         // Process the received datagram.
-        System.out.println("Elevator " + id + ": Packet Received:");
+        System.out.println("Elevator " + id + ": Packet Received:\n");
 
         // Handle exit/no-available-command/command messages differently
         if (receivePacket.getLength() == 0) {
@@ -484,11 +484,15 @@ public class Elevator implements Runnable{
             if (direction != command.getDirectionButton()) {
                 hasUTurnCommand = true;
             }
+            // We are only moving towards one floor so it's closest.
+            closestFloor = command.getFloor();
             System.out.println("Elevator " + id + " is now moving "
-                    + direction);
+                    + direction + "\n");
+        } else {
+            // Update closest if it's beaten by the new contender.
+            closestFloor = directionalLeast(closestFloor, command.getFloor(),
+                    direction);
         }
-        // Update our closest floor.
-        closestFloor = directionalLeast(closestFloor, command.getFloor(), direction);
         // We have something to move towards!
         idleStatus = false;
     }
