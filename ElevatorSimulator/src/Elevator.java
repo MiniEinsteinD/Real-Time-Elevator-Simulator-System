@@ -110,8 +110,8 @@ public class Elevator implements Runnable{
     public void run() {
         boolean shouldContinue;
         while (!(shouldExit && idleStatus)) {
-            shouldContinue = false;
             do {
+                shouldContinue = false;
                 //Send request to elevator at the start.
                 //When we have been told to exit that means the scheduler has no
                 //commands left.
@@ -139,18 +139,15 @@ public class Elevator implements Runnable{
                 //changed.
                 updateClosestFloor();
             }
-            //TODO: Test if outer condition is needed.
-            if (!idleStatus) {
-                //If we're out of commands and destinations, let the scheduler
-                //know they can make us change direction.
-                if (commands.size() == 0 && destinationFloors.size() == 0) {
-                    System.out.println("Elevator " + id + " is now idle."
-                            + "\n");
-                    idleStatus = true;
-                } else {
-                    moveFloor(); //Moves floor based on idle status and
-                                 //direction.
-                }
+            //If we're out of commands and destinations, let the scheduler
+            //know they can make us change direction.
+            if (commands.size() == 0 && destinationFloors.size() == 0) {
+                System.out.println("Elevator " + id + " is now idle."
+                        + "\n");
+                idleStatus = true;
+            } else {
+                moveFloor(); //Moves floor based on idle status and
+                             //direction.
             }
         }
 
@@ -247,8 +244,8 @@ public class Elevator implements Runnable{
         int i = 0;
         while (i < destinationFloors.size()) {
             if (floorLevel == destinationFloors.get(i)) {
-                System.out.println("Elevator " + id + " Arrived at floor "
-                        + destinationFloors.get(i) + "\n");
+                System.out.println("A passenger on Elevator " + id + " arrived "
+                        + "at floor " + destinationFloors.get(i) + "\n");
                 LOGGER.info("Elevator "+ id + " has arrived to the destination");
                 destinationFloors.remove(i);
             } else {
@@ -267,9 +264,8 @@ public class Elevator implements Runnable{
         int i = 0;
         while (i < commands.size()) {
             if (floorLevel == commands.get(i).getFloor()) {
-                System.out.println("Elevator " + id
-                        + " Picking Up passenger with command:\n"
-                        + commands.get(i) + "\n");
+                System.out.println("Elevator " + id + " picking up passenger "
+                        + "with command:\n" + commands.get(i) + "\n");
                 LOGGER.info("Elevator "+ id + " has picked up the passengers");
                 destinationFloors.add(commands.get(i).getElevatorButton());
                 if (commands.get(i).isRecoverableFault()) {
@@ -288,7 +284,6 @@ public class Elevator implements Runnable{
 
                     hasUTurnCommand = false;
                 }
-                // Update the closest floor. TODO
 
                 commands.remove(i);
             } else {
