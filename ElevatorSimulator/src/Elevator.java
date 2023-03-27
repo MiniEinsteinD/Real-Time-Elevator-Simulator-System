@@ -34,6 +34,9 @@ public class Elevator implements Runnable{
     private List<Integer> recoverableFaultFloors;
     private List<Integer> permanentFaultFloors;
 
+    private int closestFloor; // The next floor we need to reach for a
+                                  // command we're servicing.
+
     private InetAddress SchedulerAddress;
 
     // Attributes determining the state of the Elevator!
@@ -72,6 +75,8 @@ public class Elevator implements Runnable{
         destinationFloors = new ArrayList<Integer>();
         recoverableFaultFloors = new ArrayList<Integer>();
         permanentFaultFloors = new ArrayList<Integer>();
+
+        closestFloor = MAX_FLOOR_LEVEL + 1;
 
         shouldExit = false;
         direction = Direction.UP;
@@ -123,8 +128,12 @@ public class Elevator implements Runnable{
             //Keep sending until we're told to we can continue to moving
             //and we aren't idle meaning we have a command to service.
             if (!(shouldContinue || idleStatus)) {
-                reachFloor(); //Handles all actions associated with reaching a
-                              //floor.
+                //Handles all actions associated with reaching a
+                //floor.
+                reachFloor();
+                //We reached a floor; the next one we must go to may have
+                //changed.
+                updateClosestFloor();
                 //If we're out of commands and destinations, let the scheduler
                 //know they can make us change direction.
                 if (commands.size() == 0 && destinationFloors.size() == 0) {
@@ -271,6 +280,8 @@ public class Elevator implements Runnable{
 
                     hasUTurnCommand = false;
                 }
+                // Update the closest floor. TODO
+
                 commands.remove(i);
             } else {
                 ++i;
@@ -468,7 +479,62 @@ public class Elevator implements Runnable{
             System.out.println("Elevator " + id + " is now moving "
                     + direction);
         }
+        // Update our closest floor.
+        closestFloor = directionalLeast(closestFloor, command.getFloor(), direction);
+        // We have something to move towards!
         idleStatus = false;
+    }
+
+
+    /**
+     * Determines which of two floors is least dependent on the direction.
+     * If the direction is Direction.UP, lower floors are preferred.
+     * If the direction is Direction.DOWN, higher floors are preferred.
+     * @param aFloor a floor to be compared.
+     * @param bFloor a floor to be compared.
+     * @param direction the direction to do the comparison.
+     * @return int, the floor that is least in the direction
+     */
+    private static int directionalLeast(int aFloor, int bFloor,
+            Direction direction) {
+        if (direction == Direction.UP) {
+            if (aFloor < bFloor) {
+                return aFloor;
+            } else {
+                return bFloor;
+            }
+        } else {
+            if (aFloor < bFloor) {
+                return bFloor;
+            } else {
+                return aFloor;
+            }
+        }
+    }
+
+
+    /**
+     * Updates our record of the closest floor based on all of the floors we
+     * must reach.
+     */
+    private void updateClosestFloor() {
+        int closestFloor = directionalLeast(MAX_FLOOR_LEVEL, MIN_FLOOR_LEVEL,
+                direction);
+        int i = 0;
+        while (i < commands.size()) {
+            closestFloor = directionalLeast(closestFloor,
+                    commands.get(i).getFloor(), direction);
+            ++i;
+        }
+
+        i = 0;
+        while (i < destinationFloors.size()) {
+            closestFloor = directionalLeast(closestFloor,
+                    destinationFloors.get(i), direction);
+            ++i;
+        }
+
+        this.closestFloor = closestFloor;
     }
 
 
