@@ -76,6 +76,8 @@ public class Elevator implements Runnable{
         recoverableFaultFloors = new ArrayList<Integer>();
         permanentFaultFloors = new ArrayList<Integer>();
 
+        // Set closestFloor to greater than max/min possible value so it gets
+        // overwritten by first command.
         closestFloor = MAX_FLOOR_LEVEL + 1;
 
         shouldExit = false;
@@ -524,9 +526,15 @@ public class Elevator implements Runnable{
      * must reach.
      */
     private void updateClosestFloor() {
-        int closestFloor = directionalLeast(MAX_FLOOR_LEVEL, MIN_FLOOR_LEVEL,
-                direction);
+        int closestFloor;
         int i = 0;
+        // Set closestFloor to greater than max/min possible value so it gets
+        // overwritten by first command.
+        if (direction == Direction.UP) {
+            closestFloor = MAX_FLOOR_LEVEL + 1;
+        } else {
+            closestFloor = MIN_FLOOR_LEVEL - 1;
+        }
         while (i < commands.size()) {
             closestFloor = directionalLeast(closestFloor,
                     commands.get(i).getFloor(), direction);
