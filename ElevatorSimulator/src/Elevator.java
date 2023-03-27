@@ -110,30 +110,36 @@ public class Elevator implements Runnable{
         boolean shouldContinue;
         while (!(shouldExit && idleStatus)) {
             shouldContinue = false;
-            //Send request to elevator at the start.
-            //When we have been told to exit that means the scheduler has no
-            //commands left.
-            //When we have a U-Turn Command we don't want to accept commands
-            //in the direction we're moving.
-            if (!(shouldExit || hasUTurnCommand)) {
-                shouldContinue = this.retrieveCommandFromScheduler();
-            }
-            //Checks whether the elevator should go up or down.
-            //Forces Elevators to take an equal number of commands
-            //because they can't hog send requests to the scheduler.
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-            }
-            //Keep sending until we're told to we can continue to moving
-            //and we aren't idle meaning we have a command to service.
-            if (!(shouldContinue || idleStatus)) {
+            do {
+                //Send request to elevator at the start.
+                //When we have been told to exit that means the scheduler has no
+                //commands left.
+                //When we have a U-Turn Command we don't want to accept commands
+                //in the direction we're moving.
+                if (!(shouldExit || hasUTurnCommand)) {
+                    shouldContinue = this.retrieveCommandFromScheduler();
+                }
+                //Forces Elevators to take an equal number of commands
+                //because they can't hog send requests to the scheduler.
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {}
+                //Keep sending until we're told by the Scheduler we can
+                //continue.
+            } while (!shouldContinue);
+            //Currently we are forcing the scheduler to get back to us before we
+            //let passengers our. Kinda messy, but moving this below the next if
+            //can cause problems with commands on the first floor being skipped.
+            if (closestFloor == floorLevel) {
                 //Handles all actions associated with reaching a
                 //floor.
                 reachFloor();
                 //We reached a floor; the next one we must go to may have
                 //changed.
                 updateClosestFloor();
+            }
+            //TODO: Test if outer condition is needed.
+            if (!idleStatus) {
                 //If we're out of commands and destinations, let the scheduler
                 //know they can make us change direction.
                 if (commands.size() == 0 && destinationFloors.size() == 0) {
