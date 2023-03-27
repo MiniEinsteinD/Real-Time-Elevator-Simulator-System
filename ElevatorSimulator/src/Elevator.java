@@ -124,9 +124,9 @@ public class Elevator implements Runnable{
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {}
-                //Keep sending until we're told by the Scheduler we can
+                //Keep sending while we're told by the Scheduler we can
                 //continue.
-            } while (!shouldContinue);
+            } while (shouldContinue);
             //Currently we are forcing the scheduler to get back to us before we
             //let passengers our. Kinda messy, but moving this below the next if
             //can cause problems with commands on the first floor being skipped.
