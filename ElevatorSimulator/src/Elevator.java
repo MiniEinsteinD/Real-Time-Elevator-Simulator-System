@@ -177,7 +177,7 @@ public class Elevator implements Runnable{
                 currentThread.interrupt();
             }
         };
-        boolean moveComplete = false; // Successfully moved one floor.
+        boolean actionComplete = false; // Successfully opened/closed the doors.
 
         int i = 0;
         int faultFloor;
@@ -197,7 +197,7 @@ public class Elevator implements Runnable{
         faultTimer.schedule(recoverableFaultHandler, 4 * OPEN_CLOSE_TIME,
                 4 * OPEN_CLOSE_TIME);
 
-        while (!moveComplete) {
+        while (!actionComplete) {
             if (isRecoverableFaultFloor && !faultExercised) {
                 // Simulate problems with doors opening.
                 // Uhoh, who put this loop here??
@@ -223,7 +223,7 @@ public class Elevator implements Runnable{
                     passengersEntering(); //Deal with commands that we've
                                           //reached.
                     Thread.sleep(OPEN_CLOSE_TIME); // Doors are closing.
-                    moveComplete = true;
+                    actionComplete = true;
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -335,6 +335,8 @@ public class Elevator implements Runnable{
                     // so that we don't burn clock cycles.
                     Thread.sleep(4000);
                 } catch (InterruptedException e) {
+                    faultTimer.cancel();
+                    faultTimer.purge();
                     throw new RuntimeException("Elevator " + id
                             + " stalled between floors");
                 }
@@ -356,6 +358,8 @@ public class Elevator implements Runnable{
                 && floorLevel > MIN_FLOOR_LEVEL) {
             floorLevel--;
         } else {
+            faultTimer.cancel();
+            faultTimer.purge();
             throw new RuntimeException("Elevator wants to move past max/min "
                     + "floor (likely skipped a command/destination)");
         }
@@ -424,6 +428,8 @@ public class Elevator implements Runnable{
 
         // Handle exit/no-available-command/command messages differently
         if (receivePacket.getLength() == 0) {
+            faultTimer.cancel();
+            faultTimer.purge();
             throw new RuntimeException("Invalid length for message received "
                 + "from Scheduler.");
         } else if (data[0] == 0) {
@@ -440,6 +446,8 @@ public class Elevator implements Runnable{
             addCommand(command);
             LOGGER.info("Elevator "+ id + " received packet from transmitter" + command);
         } else {
+            faultTimer.cancel();
+            faultTimer.purge();
             throw new RuntimeException("Invalid format for message received "
                 + "from Scheduler.");
         }
