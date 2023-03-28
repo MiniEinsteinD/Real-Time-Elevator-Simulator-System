@@ -187,6 +187,7 @@ public class Elevator implements Runnable{
             faultFloor = recoverableFaultFloors.get(i);
             if (floorLevel == faultFloor) {
                 isRecoverableFaultFloor = true;
+                recoverableFaultFloors.remove(i);
             }
             ++i;
         }
@@ -317,6 +318,7 @@ public class Elevator implements Runnable{
             permanentFaultFloor = permanentFaultFloors.get(i);
             if (floorLevel == permanentFaultFloor) {
                 isPermanentFaultFloor = true;
+                permanentFaultFloors.remove(i);
             }
             ++i;
         }
