@@ -128,9 +128,8 @@ public class Elevator implements Runnable{
                 //Keep sending while we're told by the Scheduler we can
                 //continue.
             } while (shouldContinue);
-            //Currently we are forcing the scheduler to get back to us before we
-            //let passengers out. Kinda messy, but moving this below the next if
-            //can cause problems with commands on the first floor being skipped.
+
+            // We're on the next floor we needed to get to.
             if (closestFloor == floorLevel) {
                 //Handles all actions associated with reaching a
                 //floor.
