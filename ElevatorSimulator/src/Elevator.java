@@ -34,6 +34,9 @@ public class Elevator implements Runnable{
     private List<Integer> recoverableFaultFloors;
     private List<Integer> permanentFaultFloors;
 
+    private int closestFloor; // The next floor we need to reach for a
+                                  // command we're servicing.
+
     private InetAddress SchedulerAddress;
 
     // Attributes determining the state of the Elevator!
@@ -73,6 +76,9 @@ public class Elevator implements Runnable{
         recoverableFaultFloors = new ArrayList<Integer>();
         permanentFaultFloors = new ArrayList<Integer>();
 
+        // Set closestFloor to an illegal value to start.
+        closestFloor = MAX_FLOOR_LEVEL + 1;
+
         shouldExit = false;
         direction = Direction.UP;
         floorLevel = 1;
@@ -104,40 +110,47 @@ public class Elevator implements Runnable{
     public void run() {
         boolean shouldContinue;
         while (!(shouldExit && idleStatus)) {
-            shouldContinue = false;
-            //Send request to elevator at the start.
-            //When we have been told to exit that means the scheduler has no
-            //commands left.
-            //When we have a U-Turn Command we don't want to accept commands
-            //in the direction we're moving.
-            if (!(shouldExit || hasUTurnCommand)) {
-                shouldContinue = this.retrieveCommandFromScheduler();
-            }
-            //Checks whether the elevator should go up or down.
-            //Forces Elevators to take an equal number of commands
-            //because they can't hog send requests to the scheduler.
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-            }
-            //Keep sending until we're told to we can continue to moving
-            //and we aren't idle meaning we have a command to service.
-            if (!(shouldContinue || idleStatus)) {
-                reachFloor(); //Handles all actions associated with reaching a
-                              //floor.
-                //If we're out of commands and destinations, let the scheduler
-                //know they can make us change direction.
-                if (commands.size() == 0 && destinationFloors.size() == 0) {
-                    System.out.println("Elevator " + id + " is now idle.");
-                    idleStatus = true;
-                } else {
-                    moveFloor(); //Moves floor based on idle status and
-                                 //direction.
+            do {
+                shouldContinue = false;
+                //Send request to elevator at the start.
+                //When we have been told to exit that means the scheduler has no
+                //commands left.
+                //When we have a U-Turn Command we don't want to accept commands
+                //in the direction we're moving.
+                if (!(shouldExit || hasUTurnCommand)) {
+                    shouldContinue = this.retrieveCommandFromScheduler();
                 }
+                //Forces Elevators to take an equal number of commands
+                //because they can't hog send requests to the scheduler.
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {}
+                //Keep sending while we're told by the Scheduler we can
+                //continue.
+            } while (shouldContinue);
+
+            // We're on the next floor we needed to get to.
+            if (closestFloor == floorLevel) {
+                //Handles all actions associated with reaching a
+                //floor.
+                reachFloor();
+                //We reached a floor; the next one we must go to may have
+                //changed.
+                updateClosestFloor();
+            }
+            //If we're out of commands and destinations, let the scheduler
+            //know they can make us change direction.
+            if (commands.size() == 0 && destinationFloors.size() == 0) {
+                System.out.println("Elevator " + id + " is now idle."
+                        + "\n");
+                idleStatus = true;
+            } else {
+                moveFloor(); //Moves floor based on idle status and
+                             //direction.
             }
         }
 
-        System.out.println("Elevator " + id + " is exiting.");
+        System.out.println("Elevator " + id + " is exiting." + "\n");
         faultTimer.cancel();
         faultTimer.purge();
     }
@@ -163,7 +176,7 @@ public class Elevator implements Runnable{
                 currentThread.interrupt();
             }
         };
-        boolean moveComplete = false; // Successfully moved one floor.
+        boolean actionComplete = false; // Successfully opened/closed the doors.
 
         int i = 0;
         int faultFloor;
@@ -173,6 +186,7 @@ public class Elevator implements Runnable{
             faultFloor = recoverableFaultFloors.get(i);
             if (floorLevel == faultFloor) {
                 isRecoverableFaultFloor = true;
+                recoverableFaultFloors.remove(i);
             }
             ++i;
         }
@@ -182,7 +196,7 @@ public class Elevator implements Runnable{
         faultTimer.schedule(recoverableFaultHandler, 4 * OPEN_CLOSE_TIME,
                 4 * OPEN_CLOSE_TIME);
 
-        while (!moveComplete) {
+        while (!actionComplete) {
             if (isRecoverableFaultFloor && !faultExercised) {
                 // Simulate problems with doors opening.
                 // Uhoh, who put this loop here??
@@ -196,7 +210,7 @@ public class Elevator implements Runnable{
                     }
                 }
                 System.out.println("Elevator " + id + " handled door issues "
-                        + "on floor " + floorLevel);
+                        + "on floor " + floorLevel + "\n");
                 // Don't enter this if block again.
                 faultExercised = true;
             } else {
@@ -208,7 +222,7 @@ public class Elevator implements Runnable{
                     passengersEntering(); //Deal with commands that we've
                                           //reached.
                     Thread.sleep(OPEN_CLOSE_TIME); // Doors are closing.
-                    moveComplete = true;
+                    actionComplete = true;
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -230,8 +244,8 @@ public class Elevator implements Runnable{
         int i = 0;
         while (i < destinationFloors.size()) {
             if (floorLevel == destinationFloors.get(i)) {
-                System.out.println("Elevator " + id + " Arrived at floor "
-                        + destinationFloors.get(i) + "\n");
+                System.out.println("A passenger on Elevator " + id + " arrived "
+                        + "at floor " + destinationFloors.get(i) + "\n");
                 LOGGER.info("Elevator "+ id + " has arrived to the destination");
                 destinationFloors.remove(i);
             } else {
@@ -250,9 +264,8 @@ public class Elevator implements Runnable{
         int i = 0;
         while (i < commands.size()) {
             if (floorLevel == commands.get(i).getFloor()) {
-                System.out.println("Elevator " + id
-                        + " Picking Up passenger with command:\n"
-                        + commands.get(i) + "\n");
+                System.out.println("Elevator " + id + " picking up passenger "
+                        + "with command:\n" + commands.get(i) + "\n");
                 LOGGER.info("Elevator "+ id + " has picked up the passengers");
                 destinationFloors.add(commands.get(i).getElevatorButton());
                 if (commands.get(i).isRecoverableFault()) {
@@ -267,10 +280,11 @@ public class Elevator implements Runnable{
                 if (hasUTurnCommand) {
                     direction = commands.get(i).getDirectionButton();
                     System.out.println("Elevator " + id + " is now moving "
-                            + direction);
+                            + direction + "\n");
 
                     hasUTurnCommand = false;
                 }
+
                 commands.remove(i);
             } else {
                 ++i;
@@ -303,6 +317,7 @@ public class Elevator implements Runnable{
             permanentFaultFloor = permanentFaultFloors.get(i);
             if (floorLevel == permanentFaultFloor) {
                 isPermanentFaultFloor = true;
+                permanentFaultFloors.remove(i);
             }
             ++i;
         }
@@ -319,6 +334,8 @@ public class Elevator implements Runnable{
                     // so that we don't burn clock cycles.
                     Thread.sleep(4000);
                 } catch (InterruptedException e) {
+                    faultTimer.cancel();
+                    faultTimer.purge();
                     throw new RuntimeException("Elevator " + id
                             + " stalled between floors");
                 }
@@ -340,6 +357,8 @@ public class Elevator implements Runnable{
                 && floorLevel > MIN_FLOOR_LEVEL) {
             floorLevel--;
         } else {
+            faultTimer.cancel();
+            faultTimer.purge();
             throw new RuntimeException("Elevator wants to move past max/min "
                     + "floor (likely skipped a command/destination)");
         }
@@ -390,11 +409,11 @@ public class Elevator implements Runnable{
         //--------------------------------//
         byte data[] = new byte[1000];
         receivePacket = new DatagramPacket(data, data.length);
-        System.out.println("Elevator " + id + ": Waiting for Packet.\n");
+        System.out.println("Elevator " + id + ": Waiting for Packet.");
 
         // Block until a datagram packet is received from receiveSocket.
         try {
-            System.out.println("Waiting..."); // so we know we're waiting
+            System.out.println("Waiting...\n"); // so we know we're waiting
             sendRecieveSocket.receive(receivePacket);
         } catch (IOException e) {
             System.out.print("IO Exception: likely:");
@@ -404,10 +423,12 @@ public class Elevator implements Runnable{
         }
 
         // Process the received datagram.
-        System.out.println("Elevator " + id + ": Packet Received:");
+        System.out.println("Elevator " + id + ": Packet Received:\n");
 
         // Handle exit/no-available-command/command messages differently
         if (receivePacket.getLength() == 0) {
+            faultTimer.cancel();
+            faultTimer.purge();
             throw new RuntimeException("Invalid length for message received "
                 + "from Scheduler.");
         } else if (data[0] == 0) {
@@ -424,6 +445,8 @@ public class Elevator implements Runnable{
             addCommand(command);
             LOGGER.info("Elevator "+ id + " received packet from transmitter" + command);
         } else {
+            faultTimer.cancel();
+            faultTimer.purge();
             throw new RuntimeException("Invalid format for message received "
                 + "from Scheduler.");
         }
@@ -465,10 +488,75 @@ public class Elevator implements Runnable{
             if (direction != command.getDirectionButton()) {
                 hasUTurnCommand = true;
             }
+            // We are only moving towards one floor so it's closest.
+            closestFloor = command.getFloor();
             System.out.println("Elevator " + id + " is now moving "
-                    + direction);
+                    + direction + "\n");
+        } else {
+            // Update closest if it's beaten by the new contender.
+            closestFloor = directionalLeast(closestFloor, command.getFloor(),
+                    direction);
         }
+        // We have something to move towards!
         idleStatus = false;
+    }
+
+
+    /**
+     * Determines which of two floors is least dependent on the direction.
+     * If the direction is Direction.UP, lower floors are preferred.
+     * If the direction is Direction.DOWN, higher floors are preferred.
+     * @param aFloor a floor to be compared.
+     * @param bFloor a floor to be compared.
+     * @param direction the direction to do the comparison.
+     * @return int, the floor that is least in the direction
+     */
+    private static int directionalLeast(int aFloor, int bFloor,
+            Direction direction) {
+        if (direction == Direction.UP) {
+            if (aFloor < bFloor) {
+                return aFloor;
+            } else {
+                return bFloor;
+            }
+        } else {
+            if (aFloor < bFloor) {
+                return bFloor;
+            } else {
+                return aFloor;
+            }
+        }
+    }
+
+
+    /**
+     * Updates our record of the closest floor based on all of the floors we
+     * must reach.
+     */
+    private void updateClosestFloor() {
+        int closestFloor;
+        int i = 0;
+        // Set closestFloor to greater than max/min possible value so it gets
+        // overwritten by first command.
+        if (direction == Direction.UP) {
+            closestFloor = MAX_FLOOR_LEVEL + 1;
+        } else {
+            closestFloor = MIN_FLOOR_LEVEL - 1;
+        }
+        while (i < commands.size()) {
+            closestFloor = directionalLeast(closestFloor,
+                    commands.get(i).getFloor(), direction);
+            ++i;
+        }
+
+        i = 0;
+        while (i < destinationFloors.size()) {
+            closestFloor = directionalLeast(closestFloor,
+                    destinationFloors.get(i), direction);
+            ++i;
+        }
+
+        this.closestFloor = closestFloor;
     }
 
 
