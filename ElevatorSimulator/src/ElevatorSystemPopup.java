@@ -25,16 +25,17 @@ public class ElevatorSystemPopup extends JFrame {
         super("Elevator System Configuration");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(500, 300);
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(null); //center the GUI to the middle
 
         // Set up the UI components
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        add(panel);
+        this.add(panel);
 
         // Set up the number of elevators and floors combo boxes
         JLabel elevatorsLabel = new JLabel("Number of Elevators:");
         elevatorsComboBox = new JComboBox<>(new Integer[]{1, 2, 3, 4, 5});
+        //add elevatorsComboBox to panel
         JPanel elevatorsPanel = new JPanel();
         elevatorsPanel.add(elevatorsLabel);
         elevatorsPanel.add(elevatorsComboBox);
@@ -42,6 +43,7 @@ public class ElevatorSystemPopup extends JFrame {
 
         JLabel floorsLabel = new JLabel("Number of Floors:");
         floorsComboBox = new JComboBox<>(new Integer[]{5, 6, 7, 8, 9, 10});
+        //add floorsComboBox to panel
         JPanel floorsPanel = new JPanel();
         floorsPanel.add(floorsLabel);
         floorsPanel.add(floorsComboBox);
@@ -50,9 +52,11 @@ public class ElevatorSystemPopup extends JFrame {
         // Set up the single/multiple computer radio buttons
         singleComputerRadioButton = new JRadioButton("Single Computer", true);
         multipleComputerRadioButton = new JRadioButton("Multiple Computers");
+        //create a button group so that only one of the two buttons can be ON
         ButtonGroup computerGroup = new ButtonGroup();
         computerGroup.add(singleComputerRadioButton);
         computerGroup.add(multipleComputerRadioButton);
+        //add buttons to panel
         JPanel computerPanel = new JPanel();
         computerPanel.add(singleComputerRadioButton);
         computerPanel.add(multipleComputerRadioButton);
@@ -60,7 +64,8 @@ public class ElevatorSystemPopup extends JFrame {
 
         // Set up the subsystem combo box and host name text field
         JLabel subsystemLabel = new JLabel("Subsystem:");
-        subsystemComboBox = new JComboBox<>(new String[]{"FloorSubsystem", "ElevatorSubsystem", "SchedulerSubsystem"});
+        subsystemComboBox = new JComboBox<>(new String[]{SystemType.FloorSubsystem.name(),
+                SystemType.ElevatorSubsystem.name(), SystemType.SchedulerSubsystem.name()});
         JLabel hostNameLabel = new JLabel("Host Name:");
         hostNameTextField = new JTextField(10);
         hostNameTextField.setEnabled(false);
@@ -107,6 +112,7 @@ public class ElevatorSystemPopup extends JFrame {
             dispose();
         });
 
+        //add the ok button to a panel
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(okButton);
         panel.add(buttonPanel);
@@ -114,7 +120,7 @@ public class ElevatorSystemPopup extends JFrame {
         // Display the frame
         setVisible(true);
 
-        // Wait for the frame to be closed
+        // Wait for the frame to be closed-- this is added so that the items inputted can be retreived
         try {
             while (isVisible()) {
                 Thread.sleep(100);
