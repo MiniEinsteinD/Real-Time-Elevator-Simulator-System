@@ -19,6 +19,7 @@ import java.util.*;
  */
 public class Elevator implements Runnable{
 
+    private final ElevatorFrame frame;
     private int id; //Represents the id of the elevator
 
     private ArrayList<Command> commands;
@@ -64,12 +65,13 @@ public class Elevator implements Runnable{
     private Timer faultTimer = new Timer(); // Timer for interrupting on a
                                             // fault.
 
+
     /**
      * Constructs and elevator using a scheduler and id
      *
      * @param id the id of the elevator
      */
-    public Elevator(int id, InetAddress SchedulerAddress) {
+    public Elevator(int id, InetAddress SchedulerAddress, ElevatorFrame frame) {
         this.id = id;
         commands = new ArrayList<Command>();
         destinationFloors = new ArrayList<Integer>();
@@ -84,6 +86,8 @@ public class Elevator implements Runnable{
         floorLevel = 1;
         idleStatus = true;
         hasUTurnCommand = false;
+        this.frame = frame;
+        frame.update(new ElevatorState(direction, floorLevel, true, id));
 
         try {
             // Construct a datagram socket and bind it to any available
@@ -148,6 +152,7 @@ public class Elevator implements Runnable{
                 moveFloor(); //Moves floor based on idle status and
                              //direction.
             }
+            frame.update(new ElevatorState(direction, floorLevel, idleStatus, id));
         }
 
         System.out.println("Elevator " + id + " is exiting." + "\n");
@@ -386,13 +391,14 @@ public class Elevator implements Runnable{
 
         boolean shouldContinue = true;
 
+        new ElevatorState(direction, floorLevel, idleStatus, id);
         //Sent data to scheduler
         byte[] sendData = Marshalling.serialize(
-                new ElevatorState(direction, floorLevel, idleStatus));
+                new ElevatorState(direction, floorLevel, idleStatus, id));
         sendPacket = new DatagramPacket(sendData, sendData.length,
                 SchedulerAddress, 69);
         System.out.println("Elevator " + id + ": Sending Packet:");
-        LOGGER.info("Elevator "+ id + ": sends packet to transmitter " + new ElevatorState(direction, floorLevel, idleStatus));//TODO - create a variable that stores the state
+        LOGGER.info("Elevator "+ id + ": sends packet to transmitter " + new ElevatorState(direction, floorLevel, idleStatus, id));//TODO - create a variable that stores the state
 
         // Send the datagram packet to the scheduler via the send socket.
         try {
@@ -560,6 +566,8 @@ public class Elevator implements Runnable{
     }
 
 
+
+    /*
     public static void main(String args[]) {
         InetAddress name;
         if (args.length == 0) {
@@ -592,5 +600,5 @@ public class Elevator implements Runnable{
         elevatorThread1.start();
         elevatorThread2.start();
         elevatorThread3.start();
-    }
+    }*/
 }

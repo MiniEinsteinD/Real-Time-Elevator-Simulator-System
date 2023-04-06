@@ -17,6 +17,8 @@ public class ElevatorState implements Serializable {
     private int floorLevel; //the floor the elevator is currently at
     private boolean idleStatus; // whether elevator is servicing a command or not
 
+    private int id;
+
 
     /**
      * Constructor for class ElevatorState. The initial state has the following info:
@@ -29,10 +31,11 @@ public class ElevatorState implements Serializable {
     }
 
 
-    public ElevatorState(Direction direction, int floorLevel, boolean idleStatus) {
+    public ElevatorState(Direction direction, int floorLevel, boolean idleStatus, int id) {
         this.direction = direction;
         this.floorLevel = floorLevel;
         this.idleStatus = idleStatus;
+        this.id = id;
     }
 
     /**
@@ -41,6 +44,15 @@ public class ElevatorState implements Serializable {
      */
     public Direction getDirection() {
         return direction;
+    }
+
+    /**
+     * Getter method for the id of the elevator
+     *
+     * @return direction of elevator
+     */
+    public int getId() {
+        return id;
     }
 
     /**
