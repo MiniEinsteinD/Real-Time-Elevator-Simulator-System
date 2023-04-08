@@ -36,7 +36,7 @@ Pair #3: Mohammed
 
 ALL contributed towards state machine diagrams, UML diagrams
 --------------------------------------------------------------------------------------------------------------
-Group Responsibilities Iteration 3 (Current Iteration):
+Group Responsibilities Iteration 3:
 
 Hasan: SchedulerReceiver Thread, SchedulerReceiverTest
 Ali: Elevator Thread, ElevatorTest (run() method)
@@ -50,6 +50,21 @@ Pair #3: Ali, Daniah
 
 All contributed towards UML class diagram, Sequence Diagram(Ethan, Daniah, Mohammed), ScheduleTransmitter State Machine(Mohammed), SchedulerReceiver State Mechine (Hasan), Elevator State Machine (Ali).
 ---------------------------------------------------------------------------------------------------------------
+
+Group Responsibilities Iteration 4 (Current Iteration):
+
+Hasan: SchedulerTransmitterTest, UML, Review Requests, Participated In Acceptance Testing, Timing Diagram
+Ali: Floor, FloorTest, Participated In Acceptance Testing, UML
+Daniah: Floor, Lead Acceptance Testing
+Mohammed: Elevator, Scheduler, Floor, Marshalling, Regression Testing, Code Refactoring, Timing Diagram [Played Along All Classes]
+Ethan: Elevator, Scheduler, Floor, Marshalling, Regression Testing, Code Refactoring [Played Along All Classes]
+
+Pair #1: Hasan, Ali, Daniah
+Pair #2: Ethan, Mohammed
+
+
+---------------------------------------------------------------------------------------------------------------
+
 Test Setup / Instructions: 
 
 1. Click File on eclipse
