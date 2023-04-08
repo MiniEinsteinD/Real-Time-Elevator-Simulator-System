@@ -13,9 +13,13 @@ import java.io.Serializable;
  */
 public class ElevatorState implements Serializable {
 
+    private boolean permanentFault;
+    private boolean recoverableFault;
     private Direction direction; //direction the elevator is going toward
     private int floorLevel; //the floor the elevator is currently at
     private boolean idleStatus; // whether elevator is servicing a command or not
+
+    private int passengerCount;
 
     private int id;
 
@@ -31,11 +35,39 @@ public class ElevatorState implements Serializable {
     }
 
 
+    /**
+     * Constructor that will be used to send information to the scheduler
+     * @param direction The elevators direction
+     * @param floorLevel The current floor of the elevator
+     * @param idleStatus The idle status of the elevator
+     * @param id The elevator id
+     */
     public ElevatorState(Direction direction, int floorLevel, boolean idleStatus, int id) {
         this.direction = direction;
         this.floorLevel = floorLevel;
         this.idleStatus = idleStatus;
         this.id = id;
+    }
+
+    /**
+     * Constructor that will be used for the Elevator Subsystem GUI
+     * @param direction The elevators direction
+     * @param floorLevel The current floor of the elevator
+     * @param idleStatus The idle status of the elevator
+     * @param id The elevator id
+     * @param passengerCount The number of passengers
+     * @param recoverableFault True if the elevator is on a recoverable fault floor, false otherwise
+     * @param permanentFault True if the elevator is on a permanent fault floor, false otherwise
+     */
+    public ElevatorState(Direction direction, int floorLevel, boolean idleStatus, int id, int passengerCount,
+                         boolean recoverableFault, boolean permanentFault) {
+        this.direction = direction;
+        this.floorLevel = floorLevel;
+        this.idleStatus = idleStatus;
+        this.id = id;
+        this.passengerCount = passengerCount;
+        this.recoverableFault = recoverableFault;
+        this.permanentFault = permanentFault;
     }
 
     /**
@@ -133,4 +165,15 @@ public class ElevatorState implements Serializable {
         System.out.println(s);
     }
 
+    public boolean isRecoverableFault() {
+        return recoverableFault;
+    }
+
+    public boolean isPermanentFault() {
+        return permanentFault;
+    }
+
+    public int getPassengerCount() {
+        return passengerCount;
+    }
 }

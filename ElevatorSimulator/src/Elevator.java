@@ -87,7 +87,9 @@ public class Elevator implements Runnable{
         idleStatus = true;
         hasUTurnCommand = false;
         this.frame = frame;
-        frame.update(new ElevatorState(direction, floorLevel, true, id));
+        //Update Gui with the initial information
+        frame.update(new ElevatorState(direction, floorLevel, true, id,
+                0, false, false));
 
         try {
             // Construct a datagram socket and bind it to any available
@@ -152,7 +154,9 @@ public class Elevator implements Runnable{
                 moveFloor(); //Moves floor based on idle status and
                              //direction.
             }
-            frame.update(new ElevatorState(direction, floorLevel, idleStatus, id));
+            //Update gui every loop
+            frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+                    destinationFloors.size(),false, false));
         }
 
         System.out.println("Elevator " + id + " is exiting." + "\n");
@@ -205,6 +209,10 @@ public class Elevator implements Runnable{
             if (isRecoverableFaultFloor && !faultExercised) {
                 // Simulate problems with doors opening.
                 // Uhoh, who put this loop here??
+                //Update gui to show that there is a recoverable fault
+                frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+                        destinationFloors.size(),true, false));
+
                 while(true) {
                     try {
                         // Amount of time is meaningless. Go with a higher value
@@ -214,8 +222,12 @@ public class Elevator implements Runnable{
                         break;
                     }
                 }
+
                 System.out.println("Elevator " + id + " handled door issues "
                         + "on floor " + floorLevel + "\n");
+                //Update gui after the fault is handled
+                frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+                        destinationFloors.size(),false, false));
                 // Don't enter this if block again.
                 faultExercised = true;
             } else {
@@ -257,6 +269,9 @@ public class Elevator implements Runnable{
                 ++i;
             }
         }
+        //Update gui after passenger leaves
+        frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+                destinationFloors.size(),false, false));
     }
 
     /**
@@ -295,6 +310,9 @@ public class Elevator implements Runnable{
                 ++i;
             }
         }
+        //Update after passenger enters
+        frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+                destinationFloors.size(),false, false));
     }
 
 
@@ -341,6 +359,9 @@ public class Elevator implements Runnable{
                 } catch (InterruptedException e) {
                     faultTimer.cancel();
                     faultTimer.purge();
+                    //Update gui if there is a permanent fault
+                    frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+                            destinationFloors.size(),false, true));
                     throw new RuntimeException("Elevator " + id
                             + " stalled between floors");
                 }
@@ -364,6 +385,7 @@ public class Elevator implements Runnable{
         } else {
             faultTimer.cancel();
             faultTimer.purge();
+
             throw new RuntimeException("Elevator wants to move past max/min "
                     + "floor (likely skipped a command/destination)");
         }
@@ -390,8 +412,6 @@ public class Elevator implements Runnable{
     public boolean retrieveCommandFromScheduler() {
 
         boolean shouldContinue = true;
-
-        new ElevatorState(direction, floorLevel, idleStatus, id);
         //Sent data to scheduler
         byte[] sendData = Marshalling.serialize(
                 new ElevatorState(direction, floorLevel, idleStatus, id));
@@ -505,6 +525,10 @@ public class Elevator implements Runnable{
         }
         // We have something to move towards!
         idleStatus = false;
+        //Update GUI when command is added
+        frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+                destinationFloors.size(),false, false));
+
     }
 
 
