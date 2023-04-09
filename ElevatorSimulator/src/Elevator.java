@@ -268,11 +268,6 @@ public class Elevator implements Runnable{
                         + "with command:\n" + commands.get(i) + "\n");
                 LOGGER.info("Elevator "+ id + " has picked up the passengers");
                 destinationFloors.add(commands.get(i).getElevatorButton());
-                if (commands.get(i).isRecoverableFault()) {
-                    recoverableFaultFloors.add(commands.get(i).getFaultLocation());
-                } else if (commands.get(i).isPermanentFault()) {
-                    permanentFaultFloors.add(commands.get(i).getFaultLocation());
-                }
                 // Change directions if the command is the special case where
                 // we had to move the direction opposite to where the passenger
                 // wants to go so that we could pick up the passenger.
@@ -497,6 +492,14 @@ public class Elevator implements Runnable{
             closestFloor = directionalLeast(closestFloor, command.getFloor(),
                     direction);
         }
+
+        // If the command contains a fault, make sure we fault there.
+        if (command.isRecoverableFault()) {
+            recoverableFaultFloors.add(command.getFaultLocation());
+        } else if (command.isPermanentFault()) {
+            permanentFaultFloors.add(command.getFaultLocation());
+        }
+
         // We have something to move towards!
         idleStatus = false;
     }
@@ -562,35 +565,37 @@ public class Elevator implements Runnable{
 
     public static void main(String args[]) {
         InetAddress name;
-        if (args.length == 0) {
+        if ((args.length < 1) || (args.length > 2)) {
+            throw new RuntimeException("Invalid command line arguments.");
+        }
+        if (args.length < 2) {
             try {
                 //get the name of the machine
                 name = InetAddress.getLocalHost();
             } catch (UnknownHostException e) {
                 throw new RuntimeException(e);
             }
-        }
-        else {
+        } else {
             try {
                 name = InetAddress.getByName(args[0]);
             } catch (UnknownHostException e) {
                 throw new RuntimeException(e);
             }
         }
+
         try {
             SubsystemLogger.setup(subsystemName);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        Elevator elevator1 = new Elevator(1, name);
-        Elevator elevator2 = new Elevator(2, name);
-        Elevator elevator3 = new Elevator(3, name);
-        Thread elevatorThread1 = new Thread(elevator1, "Elevator");
-        Thread elevatorThread2 = new Thread(elevator2, "Elevator");
-        Thread elevatorThread3 = new Thread(elevator3, "Elevator");
-        elevatorThread1.start();
-        elevatorThread2.start();
-        elevatorThread3.start();
+        int numElevators = Integer.valueOf(args[0]);
+        int i = 0;
+        while (i < numElevators) {
+            Elevator elevator = new Elevator(i + 1, name);
+            Thread elevatorThread = new Thread(elevator, "Elevator");
+            elevatorThread.start();
+            ++i;
+        }
     }
 }
