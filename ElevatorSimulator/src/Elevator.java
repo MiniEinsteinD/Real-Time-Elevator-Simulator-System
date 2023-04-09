@@ -268,11 +268,6 @@ public class Elevator implements Runnable{
                         + "with command:\n" + commands.get(i) + "\n");
                 LOGGER.info("Elevator "+ id + " has picked up the passengers");
                 destinationFloors.add(commands.get(i).getElevatorButton());
-                if (commands.get(i).isRecoverableFault()) {
-                    recoverableFaultFloors.add(commands.get(i).getFaultLocation());
-                } else if (commands.get(i).isPermanentFault()) {
-                    permanentFaultFloors.add(commands.get(i).getFaultLocation());
-                }
                 // Change directions if the command is the special case where
                 // we had to move the direction opposite to where the passenger
                 // wants to go so that we could pick up the passenger.
@@ -497,6 +492,14 @@ public class Elevator implements Runnable{
             closestFloor = directionalLeast(closestFloor, command.getFloor(),
                     direction);
         }
+
+        // If the command contains a fault, make sure we fault there.
+        if (command.isRecoverableFault()) {
+            recoverableFaultFloors.add(command.getFaultLocation());
+        } else if (command.isPermanentFault()) {
+            permanentFaultFloors.add(command.getFaultLocation());
+        }
+
         // We have something to move towards!
         idleStatus = false;
     }
