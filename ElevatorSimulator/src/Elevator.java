@@ -88,7 +88,8 @@ public class Elevator implements Runnable{
         hasUTurnCommand = false;
         this.frame = frame;
         //Update Gui with the initial information
-        frame.update(new ElevatorState(direction, floorLevel, true, id,
+        if (frame != null)
+            frame.update(new ElevatorState(direction, floorLevel, true, id,
                 0, false, false));
 
         try {
@@ -155,7 +156,8 @@ public class Elevator implements Runnable{
                              //direction.
             }
             //Update gui every loop
-            frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+            if (frame != null)
+                frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
                     destinationFloors.size(),false, false));
         }
 
@@ -210,7 +212,8 @@ public class Elevator implements Runnable{
                 // Simulate problems with doors opening.
                 // Uhoh, who put this loop here??
                 //Update gui to show that there is a recoverable fault
-                frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+                if (frame != null)
+                    frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
                         destinationFloors.size(),true, false));
 
                 while(true) {
@@ -226,7 +229,8 @@ public class Elevator implements Runnable{
                 System.out.println("Elevator " + id + " handled door issues "
                         + "on floor " + floorLevel + "\n");
                 //Update gui after the fault is handled
-                frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+                if (frame != null)
+                    frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
                         destinationFloors.size(),false, false));
                 // Don't enter this if block again.
                 faultExercised = true;
@@ -270,7 +274,8 @@ public class Elevator implements Runnable{
             }
         }
         //Update gui after passenger leaves
-        frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+        if (frame != null)
+            frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
                 destinationFloors.size(),false, false));
     }
 
@@ -311,7 +316,8 @@ public class Elevator implements Runnable{
             }
         }
         //Update after passenger enters
-        frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+        if (frame != null)
+            frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
                 destinationFloors.size(),false, false));
     }
 
@@ -360,7 +366,8 @@ public class Elevator implements Runnable{
                     faultTimer.cancel();
                     faultTimer.purge();
                     //Update gui if there is a permanent fault
-                    frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+                    if (frame != null)
+                        frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
                             destinationFloors.size(),false, true));
                     throw new RuntimeException("Elevator " + id
                             + " stalled between floors");
@@ -526,7 +533,8 @@ public class Elevator implements Runnable{
         // We have something to move towards!
         idleStatus = false;
         //Update GUI when command is added
-        frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+        if (frame != null)
+            frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
                 destinationFloors.size(),false, false));
 
     }
@@ -591,7 +599,7 @@ public class Elevator implements Runnable{
 
 
 
-    /*
+
     public static void main(String args[]) {
         InetAddress name;
         if (args.length == 0) {
@@ -615,14 +623,14 @@ public class Elevator implements Runnable{
             throw new RuntimeException(e);
         }
 
-        Elevator elevator1 = new Elevator(1, name);
-        Elevator elevator2 = new Elevator(2, name);
-        Elevator elevator3 = new Elevator(3, name);
+        Elevator elevator1 = new Elevator(1, name, null);
+        Elevator elevator2 = new Elevator(2, name, null);
+        Elevator elevator3 = new Elevator(3, name, null);
         Thread elevatorThread1 = new Thread(elevator1, "Elevator");
         Thread elevatorThread2 = new Thread(elevator2, "Elevator");
         Thread elevatorThread3 = new Thread(elevator3, "Elevator");
         elevatorThread1.start();
         elevatorThread2.start();
         elevatorThread3.start();
-    }*/
+    }
 }
