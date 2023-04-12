@@ -563,11 +563,12 @@ public class Elevator implements Runnable{
     }
 
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws InterruptedException {
         InetAddress name;
-        if ((args.length < 1) || (args.length > 2)) {
+        if (args.length > 2) {
             throw new RuntimeException("Invalid command line arguments.");
         }
+
         if (args.length < 2) {
             try {
                 //get the name of the machine
@@ -589,7 +590,13 @@ public class Elevator implements Runnable{
             throw new RuntimeException(e);
         }
 
-        int numElevators = Integer.valueOf(args[0]);
+        int numElevators;
+        if (args.length < 1) {
+            numElevators = 1;
+        } else {
+            numElevators = Integer.valueOf(args[0]);
+        }
+
         int i = 0;
         while (i < numElevators) {
             Elevator elevator = new Elevator(i + 1, name);
