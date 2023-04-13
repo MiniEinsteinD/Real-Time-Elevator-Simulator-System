@@ -69,7 +69,7 @@ public class Simulator {
             receiverThread.start();
 
             //create floor subsystem
-            Floor floor = new Floor(new File("commandFile.txt"), new DatagramSocket(20),
+            Floor floor = new Floor(new File("InputFileForTesting.txt"), new DatagramSocket(20),
                     InetAddress.getLocalHost());
             floor.startSubsystem();
 

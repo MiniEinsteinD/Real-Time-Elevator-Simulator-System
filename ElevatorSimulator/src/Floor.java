@@ -207,7 +207,7 @@ import java.util.logging.Logger;
         }
     }
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws InterruptedException {
         Floor f;
         InetAddress name;
         if (args.length != 1) {
