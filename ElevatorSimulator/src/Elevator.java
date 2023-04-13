@@ -19,6 +19,7 @@ import java.util.*;
  */
 public class Elevator implements Runnable{
 
+    private final ElevatorFrame frame;
     private int id; //Represents the id of the elevator
 
     private ArrayList<Command> commands;
@@ -64,12 +65,13 @@ public class Elevator implements Runnable{
     private Timer faultTimer = new Timer(); // Timer for interrupting on a
                                             // fault.
 
+
     /**
      * Constructs and elevator using a scheduler and id
      *
      * @param id the id of the elevator
      */
-    public Elevator(int id, InetAddress SchedulerAddress) {
+    public Elevator(int id, InetAddress SchedulerAddress, ElevatorFrame frame) {
         this.id = id;
         commands = new ArrayList<Command>();
         destinationFloors = new ArrayList<Integer>();
@@ -84,6 +86,11 @@ public class Elevator implements Runnable{
         floorLevel = 1;
         idleStatus = true;
         hasUTurnCommand = false;
+        this.frame = frame;
+        //Update Gui with the initial information
+        if (frame != null)
+            frame.update(new ElevatorState(direction, floorLevel, true, id,
+                0, false, false));
 
         try {
             // Construct a datagram socket and bind it to any available
@@ -148,6 +155,10 @@ public class Elevator implements Runnable{
                 moveFloor(); //Moves floor based on idle status and
                              //direction.
             }
+            //Update gui every loop
+            if (frame != null)
+                frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+                    destinationFloors.size(),false, false));
         }
 
         System.out.println("Elevator " + id + " is exiting." + "\n");
@@ -200,6 +211,11 @@ public class Elevator implements Runnable{
             if (isRecoverableFaultFloor && !faultExercised) {
                 // Simulate problems with doors opening.
                 // Uhoh, who put this loop here??
+                //Update gui to show that there is a recoverable fault
+                if (frame != null)
+                    frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+                        destinationFloors.size(),true, false));
+
                 while(true) {
                     try {
                         // Amount of time is meaningless. Go with a higher value
@@ -209,8 +225,13 @@ public class Elevator implements Runnable{
                         break;
                     }
                 }
+
                 System.out.println("Elevator " + id + " handled door issues "
                         + "on floor " + floorLevel + "\n");
+                //Update gui after the fault is handled
+                if (frame != null)
+                    frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+                        destinationFloors.size(),false, false));
                 // Don't enter this if block again.
                 faultExercised = true;
             } else {
@@ -252,6 +273,10 @@ public class Elevator implements Runnable{
                 ++i;
             }
         }
+        //Update gui after passenger leaves
+        if (frame != null)
+            frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+                destinationFloors.size(),false, false));
     }
 
     /**
@@ -285,6 +310,10 @@ public class Elevator implements Runnable{
                 ++i;
             }
         }
+        //Update after passenger enters
+        if (frame != null)
+            frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+                destinationFloors.size(),false, false));
     }
 
 
@@ -331,6 +360,10 @@ public class Elevator implements Runnable{
                 } catch (InterruptedException e) {
                     faultTimer.cancel();
                     faultTimer.purge();
+                    //Update gui if there is a permanent fault
+                    if (frame != null)
+                        frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+                            destinationFloors.size(),false, true));
                     throw new RuntimeException("Elevator " + id
                             + " stalled between floors");
                 }
@@ -354,6 +387,7 @@ public class Elevator implements Runnable{
         } else {
             faultTimer.cancel();
             faultTimer.purge();
+
             throw new RuntimeException("Elevator wants to move past max/min "
                     + "floor (likely skipped a command/destination)");
         }
@@ -380,14 +414,13 @@ public class Elevator implements Runnable{
     public boolean retrieveCommandFromScheduler() {
 
         boolean shouldContinue = true;
-
         //Sent data to scheduler
         byte[] sendData = Marshalling.serialize(
-                new ElevatorState(direction, floorLevel, idleStatus));
+                new ElevatorState(direction, floorLevel, idleStatus, id));
         sendPacket = new DatagramPacket(sendData, sendData.length,
                 SchedulerAddress, 69);
         System.out.println("Elevator " + id + ": Sending Packet:");
-        LOGGER.info("Elevator "+ id + ": sends packet to transmitter " + new ElevatorState(direction, floorLevel, idleStatus));//TODO - create a variable that stores the state
+        LOGGER.info("Elevator "+ id + ": sends packet to transmitter " + new ElevatorState(direction, floorLevel, idleStatus, id));//TODO - create a variable that stores the state
 
         // Send the datagram packet to the scheduler via the send socket.
         try {
@@ -502,6 +535,11 @@ public class Elevator implements Runnable{
 
         // We have something to move towards!
         idleStatus = false;
+        //Update GUI when command is added
+        if (frame != null)
+            frame.update(new ElevatorState(direction, floorLevel, idleStatus, id,
+                destinationFloors.size(),false, false));
+
     }
 
 
@@ -563,7 +601,10 @@ public class Elevator implements Runnable{
     }
 
 
-    public static void main(String args[]) throws InterruptedException {
+
+
+
+    public static void main(String args[]) {
         InetAddress name;
         if (args.length > 2) {
             throw new RuntimeException("Invalid command line arguments.");
@@ -599,7 +640,7 @@ public class Elevator implements Runnable{
 
         int i = 0;
         while (i < numElevators) {
-            Elevator elevator = new Elevator(i + 1, name);
+            Elevator elevator = new Elevator(i + 1, name, null);
             Thread elevatorThread = new Thread(elevator, "Elevator");
             elevatorThread.start();
             ++i;

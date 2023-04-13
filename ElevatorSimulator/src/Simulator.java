@@ -89,13 +89,14 @@ public class Simulator {
      */
     private void makeElevators(int numElevators, int numFloors, String hostName) throws UnknownHostException {
 
+        ElevatorFrame elevatorFrame = new ElevatorFrame(numElevators, numFloors);
         for(int i = 1; i <= numElevators; i++) {
             Elevator elevator;
             if(hostName == null) {
-                elevator = new Elevator(i, InetAddress.getLocalHost());
+                elevator = new Elevator(i, InetAddress.getLocalHost(), elevatorFrame);
             }
             else {
-                elevator = new Elevator(i, InetAddress.getByName(hostName));
+                elevator = new Elevator(i, InetAddress.getByName(hostName), elevatorFrame);
             }
             Thread elevatorThread = new Thread(elevator, "Elevator " + i);
             elevatorThread.start();
