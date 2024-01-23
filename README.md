@@ -1,5 +1,14 @@
 # Real-Time-Elevator-Simulator-System
 
+Welcome to the Elevator Control System and Simulator project! In this collaborative effort, teams will design and implement a comprehensive system comprising an elevator controller (the Scheduler), an elevator cars simulator (featuring lights, buttons, doors, and motors), and a floors simulator (complete with buttons, lights, and, of course, individuals opting for the elevator over stairs).
+
+Key Features:
+Multi-threaded Scheduler: The elevator controller is designed to be multi-threaded, effectively managing multiple elevator cars concurrently.
+
+Configurability: Customize your simulation based on project requirements. Adjust the number of floors, elevators, door operation times, and travel durations between floors.
+
+Distributed Simulation: As part of the project's scope, the simulation will eventually be distributed across multiple computers. The controller will run independently on one machine, while the simulator(s) operate on a separate computer.
+
 General Use Instructions:
 
 
